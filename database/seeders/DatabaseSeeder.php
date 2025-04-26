@@ -20,7 +20,9 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
+            CheckClockSettingSeeder::class,
             UserSeeder::class,
+            EmployeeSeeder::class,
         ]);
     }
 }
