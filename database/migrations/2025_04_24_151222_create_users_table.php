@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('email')->nullable()->unique();
             $table->string('password', 255);
             $table->boolean('is_admin');
+            $table->string('company')->default('hris');
         });
     }
 

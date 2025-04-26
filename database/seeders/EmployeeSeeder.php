@@ -31,10 +31,23 @@ class EmployeeSeeder extends Seeder
             ]);
         }
 
+        $emp002 = User::where('id', 'EMP002')->first();
+        if ($emp002) {
+            Employee::create([
+                'id' => Str::uuid(),
+                'user_id' => $emp002->id,
+                'first_name' => 'Tryo',
+                'last_name' => 'Bagus',
+                'gender' => 'L',
+                'address' => 'Jl. Kumis Kucing No. 666',
+                'ck_settings_id' => $checkClockSetting->id,
+            ]);
+        }
+
         $firstNames = ['Budi', 'Siti', 'Andi', 'Rina', 'Dewi', 'Rudi', 'Lina', 'Agus', 'Maya'];
         $lastNames = ['Santoso', 'Wahyudi', 'Saputra', 'Permata', 'Pratama', 'Wijaya', 'Rahma', 'Utama', 'Putri'];
 
-        for ($i = 2; $i <= 10; $i++) {
+        for ($i = 3; $i <= 10; $i++) {
             $number = str_pad($i, 3, '0', STR_PAD_LEFT);
             $userId = 'EMP' . $number;
 
@@ -44,6 +57,7 @@ class EmployeeSeeder extends Seeder
                     'id' => $userId,
                     'password' => Hash::make('password123'),
                     'is_admin' => false,
+                    'company' => 'hris',
                 ]);
             }
 

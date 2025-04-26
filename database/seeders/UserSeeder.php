@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@gmail.com',
             'password' => Hash::make('admin123'),
             'is_admin' => true,
+            'company' => 'hris',
         ]);
 
         // Employee Bruh
@@ -25,6 +26,15 @@ class UserSeeder extends Seeder
             'email' => 'amanda@gmail.com',
             'password' => Hash::make('amanda123'),
             'is_admin' => false,
+            'company' => 'hris',
+        ]);
+
+        User::create([
+            'id' => 'EMP002',
+            'email' => 'trio@gmail.com',
+            'password' => Hash::make('trio123'),
+            'is_admin' => false,
+            'company' => 'jti',
         ]);
     }
 }
