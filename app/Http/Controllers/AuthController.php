@@ -79,7 +79,6 @@ class AuthController extends Controller
     public function loginAdmin(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'company' => ['required'],
             'login' => ['required'],
             'password' => ['required'],
         ]);
@@ -92,17 +91,10 @@ class AuthController extends Controller
 
         $loginInput = $request->login;
         $password = $request->password;
-        $company = $request->company;
-
-        if ($company !== 'hris') {
-            return response()->json([
-                'message' => 'Company tidak terdaftar.',
-            ], 422);
-        }
 
         $user = filter_var($loginInput, FILTER_VALIDATE_EMAIL)
-            ? User::where('email', $loginInput)->where('company', $company)->first()
-            : User::where('id', $loginInput)->where('company', $company)->first();
+            ? User::where('email', $loginInput)->first()
+            : User::where('id', $loginInput)->first();
 
         if (!$user) {
             return response()->json([
@@ -132,11 +124,12 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'email' => $user->email,
                 'is_admin' => $user->is_admin,
-                'company' => $user->company,
                 'name' => 'Admin',
             ],
         ]);
     }
+
+
 
     public function logout(Request $request)
     {
