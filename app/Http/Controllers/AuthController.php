@@ -2,78 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Admin;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
-use App\Models\User;
-use App\Models\Employee;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function loginEmployee(Request $request)
+    // ======================
+    // === ADMIN SECTION ====
+    // ======================
+
+    public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'company' => ['required'],
-            'login' => ['required'],
-            'password' => ['required'],
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|confirmed|min:8',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => $validator->errors()->first()
-            ], 422);
-        }
+        $user = User::create([
+            'id' => Str::uuid(),
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'is_admin' => true,
+        ]);
 
-        $loginInput = $request->login;
-        $password = $request->password;
-        $company = $request->company;
-
-        $validCompanies = ['hris', 'jti'];
-
-        if (!in_array($company, $validCompanies)) {
-            return response()->json([
-                'message' => 'Company tidak terdaftar.',
-            ], 422);
-        }
-
-        $user = filter_var($loginInput, FILTER_VALIDATE_EMAIL)
-            ? User::where('email', $loginInput)->where('company', $company)->first()
-            : User::where('id', $loginInput)->where('company', $company)->first();
-
-        if (!$user) {
-            return response()->json([
-                'message' => 'Email/User ID tidak terdaftar.',
-            ], 422);
-        }
-
-        if ($user->is_admin) {
-            return response()->json([
-                'message' => 'Anda bukan employee.',
-            ], 422);
-        }
-
-        if (!Hash::check($password, $user->password)) {
-            return response()->json([
-                'message' => 'Password salah.',
-            ], 422);
-        }
-
-        $user->tokens()->delete();
+        Admin::create([
+            'id' => Str::uuid(),
+            'user_id' => $user->id,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+        ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'message' => 'Registrasi berhasil',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'is_admin' => $user->is_admin,
-                'company' => $user->company,
-                'name' => trim(($user->employee->first_name ?? '') . ' ' . ($user->employee->last_name ?? '')),
-            ],
-        ]);
+        ], 201);
     }
 
     public function loginAdmin(Request $request)
@@ -84,34 +56,18 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => $validator->errors()->first()
-            ], 422);
+            return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
         $loginInput = $request->login;
         $password = $request->password;
 
         $user = filter_var($loginInput, FILTER_VALIDATE_EMAIL)
-            ? User::where('email', $loginInput)->first()
-            : User::where('id', $loginInput)->first();
+            ? User::where('email', $loginInput)->where('is_admin', true)->first()
+            : User::where('id', $loginInput)->where('is_admin', true)->first();
 
-        if (!$user) {
-            return response()->json([
-                'message' => 'Email/User ID tidak terdaftar.',
-            ], 422);
-        }
-
-        if (!$user->is_admin) {
-            return response()->json([
-                'message' => 'Anda bukan admin.',
-            ], 422);
-        }
-
-        if (!Hash::check($password, $user->password)) {
-            return response()->json([
-                'message' => 'Password salah.',
-            ], 422);
+        if (!$user || !Hash::check($password, $user->password)) {
+            return response()->json(['message' => 'Login gagal.'], 422);
         }
 
         $user->tokens()->delete();
@@ -120,36 +76,72 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'is_admin' => $user->is_admin,
-                'name' => 'Admin',
-            ],
         ]);
     }
 
+    // ============================
+    // === EMPLOYEE LOGIN ONLY ====
+    // ============================
 
+    public function loginEmployee(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'company' => 'required|string',
+            'employee_id' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $company = Company::where('company_username', $request->company)->first();
+        if (!$company) {
+            return response()->json(['message' => 'Perusahaan tidak ditemukan.'], 404);
+        }
+
+        $user = User::where('id', $request->employee_id)->where('is_admin', false)->first();
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'ID atau password salah.'], 401);
+        }
+
+        $user->tokens()->delete();
+        $token = $user->createToken('employee_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login berhasil',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ]);
+    }
+
+    // ======================
+    // === COMMON METHOD ====
+    // ======================
 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Berhasil logout',
+            'message' => 'Berhasil logout.',
         ]);
     }
 
     public function user(Request $request)
     {
+        $user = $request->user();
+
         return response()->json([
-            'id' => $request->user()->id,
-            'email' => $request->user()->email,
-            'is_admin' => $request->user()->is_admin,
-            'company' => $request->user()->company,
-            'name' => $request->user()->is_admin
-                ? 'Admin'
-                : trim(($request->user()->employee->first_name ?? '') . ' ' . ($request->user()->employee->last_name ?? '')),
+            'id' => $user->id,
+            'email' => $user->email,
+            'is_admin' => $user->is_admin,
+            'name' => $user->is_admin
+                ? $user->admin->first_name . ' ' . $user->admin->last_name
+                : ($user->employee->first_name ?? 'Employee'),
         ]);
     }
 }

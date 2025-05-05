@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('check_clock_settings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name', 50);
-            $table->integer('type');
+        Schema::create('company', function (Blueprint $table) {
+            $table->string('id', 36)->primary();
+            $table->string('company_username', 255)->unique();
+            $table->string('company_name', 255); // ← nama panjang
+            $table->string('description', 255)->nullable();
             $table->timestamps();
-            $table->string('deleted_at', 30)->nullable();
         });
     }
 
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('check_clock_settings');
+        Schema::dropIfExists('company');
     }
 };

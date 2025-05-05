@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,10 +13,10 @@ use App\Http\Controllers\AuthController;
 |
 */
 
+use App\Http\Controllers\ForgotPasswordController;
+
+Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'handleLogin']);
-Route::post('/logout', [AuthController::class, 'logoutUI']);

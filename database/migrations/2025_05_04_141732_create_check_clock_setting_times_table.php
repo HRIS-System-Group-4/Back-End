@@ -12,17 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('check_clock_setting_times', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('ck_settings_id');
+            $table->string('id', 36)->primary();
+            $table->string('ck_settings_id', 36);
             $table->date('day');
             $table->time('clock_in');
             $table->time('clock_out');
-            $table->time('break_start')->nullable();
-            $table->time('break_end')->nullable();
-            $table->timestamps();
+            $table->time('break_start');
+            $table->time('break_end');
+            $table->timestamp('created_at');
+            $table->timestamp('updated_at')->nullable();
             $table->string('deleted_at', 30)->nullable();
 
-            $table->foreign('ck_settings_id')->references('id')->on('check_clock_settings');
+            $table->foreign('ck_settings_id')->references('id')->on('check_clock_settings')->onDelete('cascade');
         });
     }
 

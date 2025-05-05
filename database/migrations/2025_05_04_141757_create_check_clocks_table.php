@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('check_clocks', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
+            $table->string('id', 36)->primary();
+            $table->string('user_id', 36);
             $table->integer('check_clock_type');
             $table->time('check_clock_time');
             $table->timestamps();
             $table->string('deleted_at', 30)->nullable();
 
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

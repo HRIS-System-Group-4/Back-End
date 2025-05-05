@@ -2,17 +2,22 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use App\Models\CheckClockSetting;
+use App\Models\CheckClockSettingTime;
+use Illuminate\Support\Str;
 
 class CheckClockSettingSeeder extends Seeder
 {
-    public function run(): void
+    /**
+     * Run the database seeds.
+     */
+    public function run()
     {
         CheckClockSetting::create([
             'id' => Str::uuid(),
-            'name' => 'Default Setting',
+            'name' => 'WFO',
             'type' => 1,
         ]);
     }

@@ -9,20 +9,8 @@ class Employee extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
-
-    protected $fillable = [
-        'id',
-        'user_id',
-        'first_name',
-        'last_name',
-        'gender',
-        'address',
-        'ck_settings_id',
-    ];
-
-    public function user()
+    public function company()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

@@ -5,17 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CheckClockSetting extends Model
+class Company extends Model
 {
     use HasFactory;
 
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'name', 'type'];
+    protected $table = 'company';
 
-    public function times()
-    {
-        return $this->hasMany(CheckClockSettingTime::class, 'ck_settings_id');
-    }
+    protected $fillable = [
+        'id',
+        'company_username',
+        'company_name',
+        'description',
+        'branch_id'
+    ];
 }

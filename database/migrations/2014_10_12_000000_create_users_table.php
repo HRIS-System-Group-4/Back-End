@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('letter_formats', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name', 100);
-            $table->text('content');
-            $table->integer('status');
+        Schema::create('users', function (Blueprint $table) {
+            $table->string('id', 36)->primary();
+            $table->string('email', 100)->unique();
+            $table->string('password', 255);
+            $table->boolean('is_admin');
             $table->timestamps();
-            $table->string('deleted_at', 30)->nullable();
         });
     }
 
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('letter_formats');
+        Schema::dropIfExists('users');
     }
 };

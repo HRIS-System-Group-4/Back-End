@@ -49,6 +49,17 @@ Inputkan
 }
 ![alt text](image-5.png)
 
+API
+POST /api/admin/register
+
+POST /api/admin/login
+
+POST /api/employee/login
+
+POST /api/logout
+
+GET /api/user
+
 Klik Send.
 
 ### Coba company, id atau password disalahkan, outputnya sesuai tidak? jika tidak kabarin
