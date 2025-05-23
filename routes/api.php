@@ -21,7 +21,7 @@ use App\Http\Controllers\EmployeeController;
 */
 
 Route::post('/admin/register', [AuthController::class, 'register']);
-Route::post('admin/login', [AuthController::class, 'loginAdmin']);
+Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('employee/login', [AuthController::class, 'loginEmployee']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
@@ -37,8 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/company', [CompanyController::class, 'store']);
     Route::post('admin/logout', [AuthController::class, 'logout']);
     Route::get('admin/user', [AuthController::class, 'user']);
-
-    // Employee
+    Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
     Route::post('/add-employees', [EmployeeController::class, 'store']);
 
     // checkclock

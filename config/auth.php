@@ -41,10 +41,15 @@ return [
             'provider' => 'users',
         ],
 
+        'api' => [
+            'driver' => 'sanctum', // Pastikan ini
+            'provider' => 'users',
+        ],
         'employee' => [
             'driver' => 'session',
             'provider' => 'employees',
         ],
+
     ],
 
     /*
