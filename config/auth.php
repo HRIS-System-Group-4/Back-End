@@ -40,9 +40,8 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-
         'api' => [
-            'driver' => 'sanctum', // Pastikan ini
+            'driver' => 'sanctum',
             'provider' => 'users',
         ],
         'employee' => [
