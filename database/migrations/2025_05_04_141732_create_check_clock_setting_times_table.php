@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('check_clock_setting_times', function (Blueprint $table) {
             $table->string('id', 36)->primary();
             $table->string('ck_settings_id', 36);
-            $table->date('day');
+            $table->string('day', 10);
             $table->time('clock_in');
             $table->time('clock_out');
             $table->time('break_start');

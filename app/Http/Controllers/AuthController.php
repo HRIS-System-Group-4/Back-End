@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\Company;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -86,15 +87,15 @@ class AuthController extends Controller
     public function loginEmployee(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'company' => 'required|string',
-            'employee_id' => 'required|string',
-            'password' => 'required|string',
+            'company'      => 'required|string',
+            'employee_id'  => 'required|string',
+            'password'     => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validasi gagal',
-                'errors' => $validator->errors(),
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
@@ -103,20 +104,23 @@ class AuthController extends Controller
             return response()->json(['message' => 'Perusahaan tidak ditemukan.'], 404);
         }
 
-        $user = User::where('id', $request->employee_id)->where('is_admin', false)->first();
+        // Cari user berdasarkan employee_id
+        $user = User::where('employee_id', $request->employee_id)->where('is_admin', false)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'ID atau password salah.'], 401);
         }
 
+        // Hapus token lama, buat token baru
         $user->tokens()->delete();
         $token = $user->createToken('employee_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login berhasil',
+            'message'      => 'Login berhasil',
             'access_token' => $token,
-            'token_type' => 'Bearer',
+            'token_type'   => 'Bearer',
         ]);
     }
+
 
     // ======================
     // === COMMON METHOD ====

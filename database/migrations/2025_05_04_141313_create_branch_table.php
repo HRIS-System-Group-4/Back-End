@@ -12,6 +12,7 @@ return new class extends Migration
             $table->string('id', 36)->primary();
             $table->string('company_id', 36); // Foreign key ke company
             $table->string('branch_name', 255);
+            $table->string('location', 255)->nullable();
             $table->string('address', 255);
             $table->string('city', 50);
             $table->string('country', 50);
