@@ -81,55 +81,56 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request)
-{
-    if ($request->has(['login', 'password'])) {
-        $credentials = $request->only('login', 'password');
+    //     public function login(Request $request)
+    // {
+    //     if ($request->has(['login', 'password'])) {
+    //         $credentials = $request->only('login', 'password');
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
+    //         if (!Auth::attempt($credentials)) {
+    //             return response()->json(['message' => 'Invalid credentials'], 401);
+    //         }
 
-        $user = Auth::user();
-        $token = $user->createToken('access_token')->plainTextToken;
+    //         $user = Auth::user();
+    //         $token = $user->createToken('access_token')->plainTextToken;
 
-        return response()->json([
-            'access_token' => $token,
-            'user' => $user
-        ]);
-    }
+    //         return response()->json([
+    //             'access_token' => $token,
+    //             'user' => $user
+    //         ]);
+    //     }
 
-    // Login Employee
-    if ($request->has(['company', 'employee_id', 'password'])) {
-        $employee = Employee::where('company', $request->company)
-            ->where('employee_id', $request->employee_id)
-            ->first();
+    //     // Login Employee
+    //     if ($request->has(['company', 'employee_id', 'password'])) {
+    //         $employee = Employee::where('company', $request->company)
+    //             ->where('employee_id', $request->employee_id)
+    //             ->first();
 
-        if (!$employee || !Hash::check($request->password, $employee->password)) {
-            return response()->json(['message' => 'Invalid employee credentials'], 401);
-        }
+    //         if (!$employee || !Hash::check($request->password, $employee->password)) {
+    //             return response()->json(['message' => 'Invalid employee credentials'], 401);
+    //         }
 
-        $token = $employee->createToken('access_token')->plainTextToken;
+    //         $token = $employee->createToken('access_token')->plainTextToken;
 
-        return response()->json([
-            'access_token' => $token,
-            'employee' => $employee
-        ]);
-    }
+    //         return response()->json([
+    //             'access_token' => $token,
+    //             'employee' => $employee
+    //         ]);
+    //     }
 
-    return response()->json(['message' => 'Invalid request'], 400);
-}
+    //     return response()->json(['message' => 'Invalid request'], 400);
+    // }
 
 
-    public function fetchingAdmin(Request $request) {
+    public function fetchingAdmin(Request $request)
+    {
         $user = $request->user();
-    
+
         if (!$user->is_admin) {
             return response()->json(['message' => 'Anda Bukan Admin.'], 403);
         }
-    
+
         $admin = $user->admin;
-    
+
         return response()->json([
             'id' => $user->id,
             'email' => $user->email,
@@ -139,7 +140,7 @@ class AuthController extends Controller
             'is_admin' => true,
         ]);
     }
-    
+
 
     // ============================
     // === EMPLOYEE LOGIN ONLY ====
@@ -165,13 +166,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'Perusahaan tidak ditemukan.'], 404);
         }
 
-        // Cari user berdasarkan employee_id
         $user = User::where('employee_id', $request->employee_id)->where('is_admin', false)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'ID atau password salah.'], 401);
         }
 
-        // Hapus token lama, buat token baru
         $user->tokens()->delete();
         $token = $user->createToken('employee_token')->plainTextToken;
 
@@ -181,11 +180,6 @@ class AuthController extends Controller
             'token_type'   => 'Bearer',
         ]);
     }
-
-
-    // ======================
-    // === COMMON METHOD ====
-    // ======================
 
     public function logout(Request $request)
     {

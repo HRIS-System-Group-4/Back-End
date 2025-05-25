@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\Branch;
+use App\Http\Resources\EmployeeResource;
+
 
 class EmployeeController extends Controller
 {
@@ -69,15 +71,21 @@ class EmployeeController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Employee created',
+                'message' => 'Employee has been successfully created and saved',
                 'data'    => $employee->load('user', 'branch', 'letters'),
             ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Failed to create employee',
+                'message' => 'Failed to Add Employee',
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function show()
+    {
+        $employees = Employee::with('branch')->paginate(10); // Menampilkan 10 data per halaman
+        return EmployeeResource::collection($employees);
     }
 }
