@@ -33,6 +33,7 @@ Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 's
 
 // Employee
 Route::get('/employees', [EmployeeController::class, 'show']);
+Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/company', [CompanyController::class, 'store']);

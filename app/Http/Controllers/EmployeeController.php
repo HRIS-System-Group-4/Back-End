@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\Branch;
 use App\Http\Resources\EmployeeResource;
+use App\Http\Resources\EmployeeDetailResource;
 
 
 class EmployeeController extends Controller
@@ -87,5 +88,11 @@ class EmployeeController extends Controller
     {
         $employees = Employee::with('branch')->paginate(10); // Menampilkan 10 data per halaman
         return EmployeeResource::collection($employees);
+    }
+
+    public function detailEmployee($id)
+    {
+        $employee = Employee::with(['branch', 'user'])->findOrFail($id);
+        return new EmployeeDetailResource($employee);
     }
 }

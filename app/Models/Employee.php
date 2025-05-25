@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Employee extends Authenticatable
 {
     use HasFactory;
+    public $incrementing = false;
+    protected $keyType = 'string';
     protected $fillable = [
         'id',
         'user_id',
