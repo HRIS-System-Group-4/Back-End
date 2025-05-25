@@ -34,8 +34,11 @@ Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 's
 // Employee
 Route::get('/employees', [EmployeeController::class, 'show']);
 Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Sementara api dibuat public buat pengujian, kalo sudah fix baru dimasukkan sanctum
     Route::post('/company', [CompanyController::class, 'store']);
     Route::post('admin/logout', [AuthController::class, 'logout']);
     Route::get('admin/user', [AuthController::class, 'user']);
@@ -48,4 +51,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Attendance
     Route::post('/check-clocks', [CheckClockController::class, 'store']);
     Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
+
+    // Employee
 });
