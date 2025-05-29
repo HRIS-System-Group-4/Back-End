@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreEmployeeRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->is_admin;   // hanya admin
+    }
+
+    public function rules(): array
+    {
+        return [
+            // Personal
+            'avatar'              => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'first_name'          => 'required|string|max:50',
+            'last_name'           => 'required|string|max:50',
+            'nik'                 => 'required|string|size:16|unique:employees,nik|regex:/^\d{16}$/',
+            'gender'              => 'required|in:L,P',
+            'phone_number'        => 'required|string|max:20',
+            'birth_place'         => 'required|string|max:50',
+            'birth_date'          => 'required|date',
+            // Employment
+            'branch_id'           => 'required|exists:branch,id',
+            'job_title'           => 'required|string|max:50',
+            'grade'               => 'required|string|max:20',
+            'contract_type'       => 'required|in:permanent,contract,magang,PKWT,Pegawai Tetap',
+            'sp_type'             => 'required|string|max:20',
+            // Banking
+            'bank'                => 'required|string|max:50',
+            'bank_account_number' => 'required|string|max:30',
+            'account_holder_name' => 'required|string|max:100',
+            // Check-clock
+            'check_clock_setting_id' => 'required|exists:check_clock_settings,id',
+            // Login
+            'email'              => 'required|email|unique:users,email',
+            'password'           => 'nullable|min:6',
+            // Letters (array file)
+            'letters.*'          => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'letter_names'       => 'array',
+        ];
+    }
+}

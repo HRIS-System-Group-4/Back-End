@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\EmployeeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,13 @@ Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('employee/login', [AuthController::class, 'loginEmployee']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/employees', [EmployeeController::class, 'store']);
+    Route::get('/employees', [EmployeeController::class, 'show']);
+    Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/company', [CompanyController::class, 'store']);

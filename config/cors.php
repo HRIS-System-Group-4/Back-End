@@ -25,8 +25,10 @@ return [
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['Content-Type', 'X-CSRF-TOKEN'],
-
+    // 'allowed_headers' => ['Content-Type', 'X-CSRF-TOKEN'], 
+    
+    'allowed_headers' => ['*'], 
+    
     'exposed_headers' => [],
 
     'max_age' => 0,
@@ -34,5 +36,6 @@ return [
     // 'supports_credentials' => false,
 
     'supports_credentials' => true,
+    
 
 ];
