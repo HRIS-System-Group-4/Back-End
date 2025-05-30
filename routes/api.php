@@ -32,17 +32,12 @@ Route::get('/check-clock-settings/{id}/edit', [CheckClockSettingController::clas
 Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
 
 // Employee
-Route::get('/employees', [EmployeeController::class, 'show']);
-Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
-Route::put('/employees/{id}', [EmployeeController::class, 'update']);
-
+// Route::get('/employees', [EmployeeController::class, 'show']);
+// Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+// Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Sementara api dibuat public buat pengujian, kalo sudah fix baru dimasukkan sanctum
-    Route::post('/company', [CompanyController::class, 'store']);
-    Route::post('admin/logout', [AuthController::class, 'logout']);
-    Route::get('admin/user', [AuthController::class, 'user']);
-    Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
     Route::post('/add-employees', [EmployeeController::class, 'store']);
 
     // checkclock
@@ -53,4 +48,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
 
     // Employee
+});
+
+// Hanya bisa diakses oleh Admin
+Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
+    Route::post('/company', [CompanyController::class, 'store']);
+    Route::post('admin/logout', [AuthController::class, 'logout']);
+    Route::get('admin/user', [AuthController::class, 'user']);
+    Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
+});
+
+// Hanya bisa diakses oleh Employee (bukan admin)
+Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
+    Route::get('/employees', [EmployeeController::class, 'show']);
+    Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 });

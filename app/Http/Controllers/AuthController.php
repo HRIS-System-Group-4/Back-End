@@ -27,11 +27,24 @@ class AuthController extends Controller
             'password' => 'required|string|confirmed|min:8',
         ]);
 
+        $firstInitial = strtolower(substr($request->first_name, 0, 1));
+        $secondInitial = strtolower(substr($request->first_name, -1, 1));
+        $thirdInitial = strtolower(substr($request->last_name, 0, 1));
+        $fourthInitial = strtolower(substr($request->last_name, -1, 1));
+
+        $prefix = $firstInitial . $secondInitial . $thirdInitial . $fourthInitial;
+
+        $existingCount = User::where('employee_id', 'like', $prefix . '%')->count();
+        $number = str_pad($existingCount + 1, 3, '0', STR_PAD_LEFT);
+
+        $employeeId = $prefix . $number;
+
         $user = User::create([
             'id' => Str::uuid(),
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'is_admin' => true,
+            'employee_id' => $employeeId,
         ]);
 
         Admin::create([
@@ -49,6 +62,7 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ], 201);
     }
+
 
     public function loginAdmin(Request $request)
     {
