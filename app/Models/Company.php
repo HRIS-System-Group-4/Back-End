@@ -19,6 +19,16 @@ class Company extends Model
         'company_username',
         'company_name',
         'description',
-        'branch_id'
+        'branch_id',
+        'latitude',
+        'longitude',
+        'location_radius',
+        'subscription_active',
+        'subscription_expires_at',
+    ];
+
+    protected $casts = [
+        'subscription_active' => 'boolean',
+        'subscription_expires_at' => 'datetime',
     ];
 }

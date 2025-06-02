@@ -4,24 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClockRequest;
 use App\Models\CheckClock;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
-
-// app/Http/Controllers/CheckClockController.php
 class CheckClockController extends Controller
 {
     public function store(StoreClockRequest $request)
     {
         $user = $request->user();
-
-        $user = $request->user();
-
         $today = Carbon::now()->format('Y-m-d');
 
+        // Cek apakah sudah absen masuk hari ini (clock in type 1)
         $alreadyClockedIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('created_at', $today)
@@ -33,6 +30,48 @@ class CheckClockController extends Controller
             ], 400);
         }
 
+        // Ambil employee dan company
+        $employee = Employee::where('user_id', $user->id)->with('company')->first();
+        if (!$employee || !$employee->company) {
+            return response()->json(['message' => 'Data perusahaan tidak ditemukan.'], 404);
+        }
+
+        $company = $employee->company;
+
+        // Cek apakah subscription aktif dan tanggal berlaku
+        $subscriptionValid = $company->subscription_active
+            && $company->subscription_expires_at
+            && Carbon::parse($company->subscription_expires_at)->isFuture();
+
+        // Jika subscription aktif dan clock in WFO (1), cek lokasi wajib
+        if ($subscriptionValid && $request->check_clock_type == 1) {
+            // Validasi lokasi wajib
+            $validator = Validator::make($request->all(), [
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['message' => $validator->errors()->first()], 422);
+            }
+
+            // Validasi jarak lokasi clock in
+            $distance = $this->calculateDistance(
+                $company->latitude,
+                $company->longitude,
+                $request->latitude,
+                $request->longitude
+            );
+
+            if ($distance > $company->location_radius) {
+                return response()->json([
+                    'message' => 'Anda berada di luar area kantor. Absen ditolak.',
+                    'distance_m' => $distance,
+                ], 403);
+            }
+        }
+
+        // Simpan bukti foto jika ada
         $path = $request->file('proof')
             ? $request->file('proof')->store('proofs', 'public')
             : null;
@@ -52,6 +91,27 @@ class CheckClockController extends Controller
             'data'      => $clock,
             'proof_url' => $path ? asset('storage/' . $path) : null,
         ], 201);
+    }
+
+    // Fungsi untuk menghitung jarak 2 titik lat/lng (meter)
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // meter
+
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos($latFrom) * cos($latTo) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     public function records()

@@ -27,4 +27,9 @@ class Admin extends Model
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
+
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class);
+    }
 }
