@@ -43,12 +43,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // checkclock
     Route::put('/check-clock-settings/{id}', [CheckClockSettingController::class, 'update']);
-
-    // Attendance
-    Route::post('/check-clocks', [CheckClockController::class, 'store']);
-    Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
-
-    // Employee
 });
 
 // Hanya bisa diakses oleh Admin
@@ -67,4 +61,9 @@ Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
     Route::get('/employees', [EmployeeController::class, 'show']);
     Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
     Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+
+    // Attendance
+    Route::post('/clock-in', [CheckClockController::class, 'store']);
+    Route::post('/clock-out', [CheckClockController::class, 'clockOut']);
+    Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
 });

@@ -96,10 +96,20 @@ admin cek durasi subscription
 ![alt text](status-subscription.png)
 GET http://127.0.0.1:8000/api/subscription/status
 
-employee check clock (subscription)
+employee clock in atau absen masuk (subscription)
 ![alt text](clock-in_subscription.png)
+POST http://127.0.0.1:8000/api/clock-in
 {
 "check_clock_type": 1,
-"latitude": -6.2012,
+"latitude": -6.2000,
+"longitude": 106.8214
+}
+
+employee clock out atau absen keluar (subscription)
+![alt text](clock-in_subscription.png)
+POST http://127.0.0.1:8000/api/clock-out
+{
+"check_clock_type": 2,
+"latitude": -6.2000,
 "longitude": 106.8214
 }

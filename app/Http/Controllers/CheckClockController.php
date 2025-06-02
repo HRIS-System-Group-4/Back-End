@@ -93,6 +93,86 @@ class CheckClockController extends Controller
         ], 201);
     }
 
+    public function clockOut(Request $request)
+    {
+        $user = $request->user();
+        $today = Carbon::now()->format('Y-m-d');
+
+        // Cek apakah sudah clock out hari ini
+        $alreadyClockedOut = CheckClock::where('user_id', $user->id)
+            ->where('check_clock_type', 2) // 2 = clock out
+            ->whereDate('created_at', $today)
+            ->exists();
+
+        if ($alreadyClockedOut) {
+            return response()->json([
+                'message' => 'Anda sudah melakukan clock out hari ini.',
+            ], 400);
+        }
+
+        $employee = Employee::where('user_id', $user->id)->with('company')->first();
+        if (!$employee || !$employee->company) {
+            return response()->json(['message' => 'Data perusahaan tidak ditemukan.'], 404);
+        }
+
+        $company = $employee->company;
+
+        // Cek subscription
+        $subscriptionValid = $company->subscription_active
+            && $company->subscription_expires_at
+            && Carbon::parse($company->subscription_expires_at)->isFuture();
+
+        // Jika aktif, cek lokasi
+        $locationStatus = null;
+        $distance = null;
+
+        if ($subscriptionValid) {
+            $validator = Validator::make($request->all(), [
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['message' => $validator->errors()->first()], 422);
+            }
+
+            $distance = $this->calculateDistance(
+                $company->latitude,
+                $company->longitude,
+                $request->latitude,
+                $request->longitude
+            );
+
+            $locationStatus = $distance <= $company->location_radius ? 'inside' : 'outside';
+        }
+
+        // Simpan bukti foto jika ada
+        $path = $request->file('proof')
+            ? $request->file('proof')->store('proofs', 'public')
+            : null;
+
+        $uuid = Str::uuid()->toString();
+
+        $clock = CheckClock::create([
+            'id'               => $uuid,
+            'user_id'          => $user->id,
+            'check_clock_type' => 2, // clock out
+            'check_clock_time' => $request->input('check_clock_time', now()->format('H:i:s')),
+            'proof_path'       => $path,
+        ]);
+
+        return response()->json([
+            'message' => 'Clock out recorded',
+            'data' => $clock,
+            'proof_url' => $path ? asset('storage/' . $path) : null,
+            'location_check' => $subscriptionValid ? [
+                'status' => $locationStatus,
+                'distance_m' => $distance,
+            ] : null,
+        ]);
+    }
+
+
     // Fungsi untuk menghitung jarak 2 titik lat/lng (meter)
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
