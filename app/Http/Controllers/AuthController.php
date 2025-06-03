@@ -95,46 +95,6 @@ class AuthController extends Controller
         ]);
     }
 
-    //     public function login(Request $request)
-    // {
-    //     if ($request->has(['login', 'password'])) {
-    //         $credentials = $request->only('login', 'password');
-
-    //         if (!Auth::attempt($credentials)) {
-    //             return response()->json(['message' => 'Invalid credentials'], 401);
-    //         }
-
-    //         $user = Auth::user();
-    //         $token = $user->createToken('access_token')->plainTextToken;
-
-    //         return response()->json([
-    //             'access_token' => $token,
-    //             'user' => $user
-    //         ]);
-    //     }
-
-    //     // Login Employee
-    //     if ($request->has(['company', 'employee_id', 'password'])) {
-    //         $employee = Employee::where('company', $request->company)
-    //             ->where('employee_id', $request->employee_id)
-    //             ->first();
-
-    //         if (!$employee || !Hash::check($request->password, $employee->password)) {
-    //             return response()->json(['message' => 'Invalid employee credentials'], 401);
-    //         }
-
-    //         $token = $employee->createToken('access_token')->plainTextToken;
-
-    //         return response()->json([
-    //             'access_token' => $token,
-    //             'employee' => $employee
-    //         ]);
-    //     }
-
-    //     return response()->json(['message' => 'Invalid request'], 400);
-    // }
-
-
     public function fetchingAdmin(Request $request)
     {
         $user = $request->user();

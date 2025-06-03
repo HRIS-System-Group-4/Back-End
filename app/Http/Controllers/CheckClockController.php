@@ -18,7 +18,6 @@ class CheckClockController extends Controller
         $user = $request->user();
         $today = Carbon::now()->format('Y-m-d');
 
-        // Cek apakah sudah absen masuk hari ini (clock in type 1)
         $alreadyClockedIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('created_at', $today)
@@ -30,7 +29,6 @@ class CheckClockController extends Controller
             ], 400);
         }
 
-        // Ambil employee dan company
         $employee = Employee::where('user_id', $user->id)->with('company')->first();
         if (!$employee || !$employee->company) {
             return response()->json(['message' => 'Data perusahaan tidak ditemukan.'], 404);
@@ -38,14 +36,11 @@ class CheckClockController extends Controller
 
         $company = $employee->company;
 
-        // Cek apakah subscription aktif dan tanggal berlaku
         $subscriptionValid = $company->subscription_active
             && $company->subscription_expires_at
             && Carbon::parse($company->subscription_expires_at)->isFuture();
 
-        // Jika subscription aktif dan clock in WFO (1), cek lokasi wajib
         if ($subscriptionValid && $request->check_clock_type == 1) {
-            // Validasi lokasi wajib
             $validator = Validator::make($request->all(), [
                 'latitude' => 'required|numeric',
                 'longitude' => 'required|numeric',
@@ -55,7 +50,6 @@ class CheckClockController extends Controller
                 return response()->json(['message' => $validator->errors()->first()], 422);
             }
 
-            // Validasi jarak lokasi clock in
             $distance = $this->calculateDistance(
                 $company->latitude,
                 $company->longitude,
@@ -71,7 +65,6 @@ class CheckClockController extends Controller
             }
         }
 
-        // Simpan bukti foto jika ada
         $path = $request->file('proof')
             ? $request->file('proof')->store('proofs', 'public')
             : null;
@@ -217,7 +210,7 @@ class CheckClockController extends Controller
             } elseif ($time->gt($lateEnd)) {
                 return 'Late for Too Long';
             }
-            return 'Time to Clock Out not Clock In';
+            return 'Waktu untuk absen masuk';
         };
 
         $clockInsWithStatus = $clockIns->map(function ($clock) use ($getStatus) {

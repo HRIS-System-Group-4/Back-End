@@ -9,6 +9,7 @@ use App\Http\Controllers\CheckClockSettingController;
 use App\Http\Controllers\CheckClockController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\BranchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,13 +48,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Hanya bisa diakses oleh Admin
 Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
+    // Company
     Route::post('/company', [CompanyController::class, 'store']);
     Route::put('/company/{company}/location', [CompanyController::class, 'updateLocation']);
+
+    // Subscription
     Route::post('/subscription/activate', [SubscriptionController::class, 'activate']);
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);
+
+    // Detail Admin
     Route::post('admin/logout', [AuthController::class, 'logout']);
     Route::get('admin/user', [AuthController::class, 'user']);
     Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
+
+    // Branch
+    Route::get('/branches', [BranchController::class, 'overview']);
+    Route::post('/add-branch', [BranchController::class, 'store']);
+    Route::get('/branches/{id}', [BranchController::class, 'show']);
 });
 
 // Hanya bisa diakses oleh Employee (bukan admin)

@@ -113,3 +113,16 @@ POST http://127.0.0.1:8000/api/clock-out
 "latitude": -6.2000,
 "longitude": 106.8214
 }
+
+Admin add branch
+POST http://127.0.0.1:8000/api/add-branch
+![alt text](add-branch.png)
+{
+"branch_name": "Hris Malang",
+"address": "Jl. Watu Gilang 17 C",
+"city": "Malang",
+"country": "Indonesia",
+"latitude": -6.2000000,
+"longitude": 106.8166660,
+"status": "Active"
+}

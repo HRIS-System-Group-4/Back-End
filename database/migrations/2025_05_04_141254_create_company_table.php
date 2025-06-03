@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('description', 255)->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->integer('location_radius')->default(200);
+            $table->integer('location_radius')->default(100);
             $table->boolean('subscription_active')->default(false);
             $table->timestamp('subscription_expires_at')->nullable(); // radius meter
             $table->timestamps();
