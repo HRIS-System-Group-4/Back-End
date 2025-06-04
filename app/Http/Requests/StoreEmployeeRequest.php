@@ -28,7 +28,7 @@ class StoreEmployeeRequest extends FormRequest
             'job_title'           => 'required|string|max:50',
             'grade'               => 'required|string|max:20',
             'contract_type'       => 'required|in:permanent,contract,magang,PKWT,Pegawai Tetap',
-            'sp_type'             => 'required|string|max:20',
+            'sp_type'             => 'nullable|string|max:20',
             // Banking
             'bank'                => 'required|string|max:50',
             'bank_account_number' => 'required|string|max:30',
