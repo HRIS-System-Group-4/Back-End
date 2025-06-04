@@ -12,7 +12,7 @@ class CheckClock extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'user_id', 'check_clock_type', 'check_clock_time'];
+    protected $fillable = ['id', 'user_id', 'check_clock_type', 'check_clock_time', 'proof_path',];
 
     public function user()
     {

@@ -16,6 +16,7 @@ class Admin extends Model
         'user_id',
         'first_name',
         'last_name',
+        'company_id',
     ];
 
     public function user()
@@ -26,5 +27,10 @@ class Admin extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class);
     }
 }

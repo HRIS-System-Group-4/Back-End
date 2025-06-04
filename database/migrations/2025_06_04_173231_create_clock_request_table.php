@@ -11,17 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('company', function (Blueprint $table) {
+        Schema::create('clock_requests', function (Blueprint $table) {
             $table->string('id', 36)->primary();
-            $table->string('company_username', 255)->unique();
-            $table->string('company_name', 255); // ← nama panjang
-            $table->string('description', 255)->nullable();
+            $table->string('user_id', 36);
+            $table->tinyInteger('check_clock_type'); // 1 = clock in, 2 = clock out
+            $table->time('check_clock_time');
+            $table->string('proof_path')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->integer('location_radius')->default(100);
-            $table->boolean('subscription_active')->default(false);
-            $table->timestamp('subscription_expires_at')->nullable(); // radius meter
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('company');
+        Schema::dropIfExists('clock_request');
     }
 };
