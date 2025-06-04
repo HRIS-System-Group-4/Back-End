@@ -19,7 +19,8 @@ class CheckClockSettingTime extends Model
         'clock_in',
         'clock_out',
         'break_start',
-        'break_end'
+        'break_end',
+        'late_tolerance',
     ];
 
     public function setting()

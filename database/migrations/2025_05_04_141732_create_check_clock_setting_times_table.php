@@ -19,6 +19,7 @@ return new class extends Migration
             $table->time('clock_out');
             $table->time('break_start');
             $table->time('break_end');
+            $table->unsignedInteger('late_tolerance')->default(0);
             $table->timestamp('created_at');
             $table->timestamp('updated_at')->nullable();
             $table->string('deleted_at', 30)->nullable();

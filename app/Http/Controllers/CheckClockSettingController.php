@@ -30,6 +30,7 @@ class CheckClockSettingController extends Controller
                     'clock_out' => $day['clock_out'],
                     'break_start' => $day['break_start'] ?? null,
                     'break_end' => $day['break_end'] ?? null,
+                    'late_tolerance' => $day['late_tolerance'] ?? 0,
                 ]);
             }
 
@@ -57,12 +58,14 @@ class CheckClockSettingController extends Controller
 
         foreach ($request->input('days') as $day => $data) {
             CheckClockSettingTime::updateOrCreate(
-                ['ck_settings_id' => $setting->id, 'day' => $day],
+                ['ck_settings_id' => $setting->id, 'day' => $data['day']],
                 [
+                    'id' => Str::uuid()->toString(), // <- ini akan digunakan hanya jika insert
                     'clock_in' => $data['clock_in'],
                     'clock_out' => $data['clock_out'],
                     'break_start' => $data['break_start'],
                     'break_end' => $data['break_end'],
+                    'late_tolerance' => $data['late_tolerance'],
                 ]
             );
         }
@@ -85,6 +88,7 @@ class CheckClockSettingController extends Controller
                     'clock_out'    => $row->clock_out,
                     'break_start'  => $row->break_start,
                     'break_end'    => $row->break_end,
+                    'late_tolerance' => $row->late_tolerance,
                 ]
             ]);
 

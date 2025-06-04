@@ -10,6 +10,7 @@ use App\Http\Controllers\CheckClockController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\ClockRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,9 +30,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
 
 // Check Clock
-Route::post('/add/check-clock-settings', [CheckClockSettingController::class, 'store']);
-Route::get('/check-clock-settings/{id}/edit', [CheckClockSettingController::class, 'edit']);
-Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
+
 
 // Employee
 // Route::get('/employees', [EmployeeController::class, 'show']);
@@ -41,8 +40,7 @@ Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 's
 Route::middleware('auth:sanctum')->group(function () {
     // Sementara api dibuat public buat pengujian, kalo sudah fix baru dimasukkan sanctum
 
-    // checkclock
-    Route::put('/check-clock-settings/{id}', [CheckClockSettingController::class, 'update']);
+
 });
 
 // Hanya bisa diakses oleh Admin
@@ -50,6 +48,12 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     // Company
     Route::post('/company', [CompanyController::class, 'store']);
     Route::put('/company/{company}/location', [CompanyController::class, 'updateLocation']);
+
+    // checkclock
+    Route::put('/check-clock-settings/{id}', [CheckClockSettingController::class, 'update']);
+    Route::post('/add/check-clock-settings', [CheckClockSettingController::class, 'store']);
+    Route::get('/check-clock-settings/{id}/edit', [CheckClockSettingController::class, 'edit']);
+    Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
 
     // Subscription
     Route::post('/subscription/activate', [SubscriptionController::class, 'activate']);
@@ -67,6 +71,11 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
 
     // Employee
     Route::post('/add-employees', [EmployeeController::class, 'store']);
+
+    // Attendance Check-Clock
+    Route::get('/clock-requests', [ClockRequestController::class, 'index']);
+    Route::post('/clock-requests/{id}/approve', [ClockRequestController::class, 'approve']);
+    Route::post('/clock-requests/{id}/decline', [ClockRequestController::class, 'decline']);
 });
 
 // Hanya bisa diakses oleh Employee (bukan admin)

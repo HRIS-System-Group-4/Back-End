@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreClockRequest;
 use App\Models\CheckClock;
 use App\Models\Employee;
+use App\Models\ClockRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -16,160 +17,76 @@ class CheckClockController extends Controller
     public function store(StoreClockRequest $request)
     {
         $user = $request->user();
-        $today = Carbon::now()->format('Y-m-d');
+        $today = now()->format('Y-m-d');
 
-        $alreadyClockedIn = CheckClock::where('user_id', $user->id)
+        $alreadyRequested = ClockRequest::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('created_at', $today)
             ->exists();
 
-        if ($alreadyClockedIn) {
-            return response()->json([
-                'message' => 'Anda sudah melakukan clock in hari ini.',
-            ], 400);
-        }
-
-        $employee = Employee::where('user_id', $user->id)->with('company')->first();
-        if (!$employee || !$employee->company) {
-            return response()->json(['message' => 'Data perusahaan tidak ditemukan.'], 404);
-        }
-
-        $company = $employee->company;
-
-        $subscriptionValid = $company->subscription_active
-            && $company->subscription_expires_at
-            && Carbon::parse($company->subscription_expires_at)->isFuture();
-
-        if ($subscriptionValid && $request->check_clock_type == 1) {
-            $validator = Validator::make($request->all(), [
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['message' => $validator->errors()->first()], 422);
-            }
-
-            $distance = $this->calculateDistance(
-                $company->latitude,
-                $company->longitude,
-                $request->latitude,
-                $request->longitude
-            );
-
-            if ($distance > $company->location_radius) {
-                return response()->json([
-                    'message' => 'Anda berada di luar area kantor. Absen ditolak.',
-                    'distance_m' => $distance,
-                ], 403);
-            }
+        if ($alreadyRequested) {
+            return response()->json(['message' => 'Anda sudah mengirim permintaan clock in hari ini.'], 400);
         }
 
         $path = $request->file('proof')
             ? $request->file('proof')->store('proofs', 'public')
             : null;
 
-        $uuid = Str::uuid()->toString();
-
-        $clock = CheckClock::create([
-            'id'               => $uuid,
+        $clockRequest = ClockRequest::create([
+            'id'               => Str::uuid()->toString(),
             'user_id'          => $user->id,
-            'check_clock_type' => $request->check_clock_type,
+            'check_clock_type' => 1,
             'check_clock_time' => $request->input('check_clock_time', now()->format('H:i:s')),
             'proof_path'       => $path,
+            'latitude'         => $request->latitude,
+            'longitude'        => $request->longitude,
+            'status'           => 'pending',
         ]);
 
         return response()->json([
-            'message'   => 'Clock recorded',
-            'data'      => $clock,
-            'proof_url' => $path ? asset('storage/' . $path) : null,
-        ], 201);
+            'message' => 'Permintaan clock in telah dikirim dan menunggu persetujuan admin.',
+            'data'    => $clockRequest,
+        ]);
     }
 
     public function clockOut(Request $request)
     {
         $user = $request->user();
-        $today = Carbon::now()->format('Y-m-d');
+        $today = now()->format('Y-m-d');
 
-        // Cek apakah sudah clock out hari ini
-        $alreadyClockedOut = CheckClock::where('user_id', $user->id)
-            ->where('check_clock_type', 2) // 2 = clock out
+        $alreadyRequested = ClockRequest::where('user_id', $user->id)
+            ->where('check_clock_type', 2)
             ->whereDate('created_at', $today)
             ->exists();
 
-        if ($alreadyClockedOut) {
-            return response()->json([
-                'message' => 'Anda sudah melakukan clock out hari ini.',
-            ], 400);
+        if ($alreadyRequested) {
+            return response()->json(['message' => 'Anda sudah mengirim permintaan clock out hari ini.'], 400);
         }
 
-        $employee = Employee::where('user_id', $user->id)->with('company')->first();
-        if (!$employee || !$employee->company) {
-            return response()->json(['message' => 'Data perusahaan tidak ditemukan.'], 404);
-        }
-
-        $company = $employee->company;
-
-        // Cek subscription
-        $subscriptionValid = $company->subscription_active
-            && $company->subscription_expires_at
-            && Carbon::parse($company->subscription_expires_at)->isFuture();
-
-        // Jika aktif, cek lokasi
-        $locationStatus = null;
-        $distance = null;
-
-        if ($subscriptionValid) {
-            $validator = Validator::make($request->all(), [
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['message' => $validator->errors()->first()], 422);
-            }
-
-            $distance = $this->calculateDistance(
-                $company->latitude,
-                $company->longitude,
-                $request->latitude,
-                $request->longitude
-            );
-
-            $locationStatus = $distance <= $company->location_radius ? 'inside' : 'outside';
-        }
-
-        // Simpan bukti foto jika ada
         $path = $request->file('proof')
             ? $request->file('proof')->store('proofs', 'public')
             : null;
 
-        $uuid = Str::uuid()->toString();
-
-        $clock = CheckClock::create([
-            'id'               => $uuid,
+        $clockRequest = ClockRequest::create([
+            'id'               => Str::uuid()->toString(),
             'user_id'          => $user->id,
-            'check_clock_type' => 2, // clock out
+            'check_clock_type' => 2,
             'check_clock_time' => $request->input('check_clock_time', now()->format('H:i:s')),
             'proof_path'       => $path,
+            'latitude'         => $request->latitude,
+            'longitude'        => $request->longitude,
+            'status'           => 'pending',
         ]);
 
         return response()->json([
-            'message' => 'Clock out recorded',
-            'data' => $clock,
-            'proof_url' => $path ? asset('storage/' . $path) : null,
-            'location_check' => $subscriptionValid ? [
-                'status' => $locationStatus,
-                'distance_m' => $distance,
-            ] : null,
+            'message' => 'Permintaan clock out telah dikirim dan menunggu persetujuan admin.',
+            'data'    => $clockRequest,
         ]);
     }
 
-
-    // Fungsi untuk menghitung jarak 2 titik lat/lng (meter)
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
-        $earthRadius = 6371000; // meter
+        $earthRadius = 6371000;
 
         $latFrom = deg2rad($lat1);
         $lonFrom = deg2rad($lon1);
