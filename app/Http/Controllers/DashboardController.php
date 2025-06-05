@@ -17,6 +17,7 @@ class DashboardController extends Controller
         $totalEmployees = Employee::count();
 
         $employeesClockedInToday = CheckClock::whereDate('created_at', $today)
+            ->where('check_clock_type', 1)
             ->distinct('user_id')
             ->count('user_id');
 

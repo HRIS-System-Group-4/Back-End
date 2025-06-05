@@ -88,7 +88,7 @@ class AuthController extends Controller
             : User::where('id', $loginInput)->where('is_admin', true)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
-            return response()->json(['message' => 'Login gagal.'], 422);
+            return response()->json(['message' => 'Login gagal.'], 444);
         }
 
         $user->tokens()->delete();
@@ -150,7 +150,7 @@ class AuthController extends Controller
 
         $user = User::where('employee_id', $request->employee_id)->where('is_admin', false)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'ID atau password salah.'], 401);
+            return response()->json(['message' => 'ID atau password salah.'], 444);
         }
 
         $user->tokens()->delete();
