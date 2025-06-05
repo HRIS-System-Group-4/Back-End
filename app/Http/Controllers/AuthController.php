@@ -100,7 +100,17 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
 
-        ]);
+        ])->cookie(
+            'auth_token',
+            $token,
+            60,
+            '/',
+            null,
+            false, // false for development, true for production https
+            true,
+            false,
+            'Lax' // Lax for development, None for production https
+        );
     }
 
     public function fetchingAdmin(Request $request)
@@ -163,7 +173,17 @@ class AuthController extends Controller
             'message'      => 'Login berhasil',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-        ]);
+        ])->cookie(
+            'auth_token',
+            $token,
+            60,
+            '/',
+            null,
+            false, // false for development, true for production https
+            true,
+            false,
+            'Lax' // Lax for development, None for production https
+        );
     }
 
     public function logout(Request $request)
@@ -172,7 +192,17 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Berhasil logout.',
-        ]);
+        ])->cookie(
+            'auth_token',
+            '', // empty value
+            -1, // negative duration means delete cookie immediately
+            '/', // path
+            null, // domain (or specify domain if needed)
+            false, // secure flag
+            true, // httponly flag
+            false,
+            'Lax'
+        );;
     }
 
     public function user(Request $request)
