@@ -24,4 +24,9 @@ class ClockRequest extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'user_id', 'id');
+    }
 }
