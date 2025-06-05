@@ -92,6 +92,8 @@ Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
     // Attendance
     Route::post('/clock-in', [CheckClockController::class, 'store']);
     Route::post('/clock-out', [CheckClockController::class, 'clockOut']);
+    Route::post('/leave', [CheckClockController::class, 'leave']);
+    Route::post('/absent', [CheckClockController::class, 'absent']);
     Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
 
     // Profile

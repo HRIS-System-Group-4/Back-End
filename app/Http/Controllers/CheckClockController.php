@@ -145,4 +145,76 @@ class CheckClockController extends Controller
             'data' => $clockInsWithStatus,
         ]);
     }
+
+    public function leave(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'check_clock_type' => 'required|in:3,4', // 3 = Sick Leave, 4 = Annual Leave
+            'reason' => 'nullable|string',
+            'proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
+        ]);
+
+        $today = now()->format('Y-m-d');
+        $type = (int)$validated['check_clock_type'];
+
+        $alreadyRequested = ClockRequest::where('user_id', $user->id)
+            ->where('check_clock_type', $type)
+            ->whereDate('created_at', $today)
+            ->exists();
+
+        if ($alreadyRequested) {
+            return response()->json(['message' => 'Anda sudah mengirim permintaan untuk hari ini.'], 400);
+        }
+
+        $path = $request->file('proof')
+            ? $request->file('proof')->store('proofs', 'public')
+            : null;
+
+        $clockRequest = ClockRequest::create([
+            'id'               => Str::uuid()->toString(),
+            'user_id'          => $user->id,
+            'check_clock_type' => $type,
+            'check_clock_time' => now()->format('H:i:s'),
+            'proof_path'       => $path,
+            'reason'           => $validated['reason'] ?? null,
+            'status'           => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Permintaan izin telah dikirim dan menunggu persetujuan.',
+            'data' => $clockRequest,
+        ]);
+    }
+
+    public function absent(Request $request)
+    {
+        $user = $request->user();
+
+        $today = now()->format('Y-m-d');
+
+        $alreadyRequested = ClockRequest::where('user_id', $user->id)
+            ->where('check_clock_type', 5)
+            ->whereDate('created_at', $today)
+            ->exists();
+
+        if ($alreadyRequested) {
+            return response()->json(['message' => 'Anda sudah mengirim permintaan absen hari ini.'], 400);
+        }
+
+        $clockRequest = ClockRequest::create([
+            'id'               => Str::uuid()->toString(),
+            'user_id'          => $user->id,
+            'check_clock_type' => 5,
+            'check_clock_time' => now()->format('H:i:s'),
+            'reason'           => $request->input('reason', 'Tanpa Keterangan'),
+            'status'           => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Permintaan absen telah dikirim.',
+            'data'    => $clockRequest,
+        ]);
+    }
 }

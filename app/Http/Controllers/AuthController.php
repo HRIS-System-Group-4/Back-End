@@ -60,7 +60,6 @@ class AuthController extends Controller
             'expires_at' => now()->addHours(3),
         ]);
 
-
         return response()->json([
             'message' => 'Registrasi berhasil',
             'access_token' => $token,
@@ -100,6 +99,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
+
         ]);
     }
 
