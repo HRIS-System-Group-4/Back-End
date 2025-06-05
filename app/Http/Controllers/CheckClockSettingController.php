@@ -60,7 +60,7 @@ class CheckClockSettingController extends Controller
             CheckClockSettingTime::updateOrCreate(
                 ['ck_settings_id' => $setting->id, 'day' => $data['day']],
                 [
-                    'id' => Str::uuid()->toString(), // <- ini akan digunakan hanya jika insert
+                    'id' => Str::uuid()->toString(),
                     'clock_in' => $data['clock_in'],
                     'clock_out' => $data['clock_out'],
                     'break_start' => $data['break_start'],
@@ -70,7 +70,6 @@ class CheckClockSettingController extends Controller
             );
         }
 
-        // return redirect()->route('check-clock.index')->with('success', 'Check Clock updated');
         return response()->json([
             'message' => 'Check Clock Berhasil di Update',
         ]);

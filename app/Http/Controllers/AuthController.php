@@ -56,6 +56,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
+
+
         return response()->json([
             'message' => 'Registrasi berhasil',
             'access_token' => $token,
@@ -88,6 +93,9 @@ class AuthController extends Controller
 
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
 
         return response()->json([
             'access_token' => $token,
@@ -147,6 +155,9 @@ class AuthController extends Controller
 
         $user->tokens()->delete();
         $token = $user->createToken('employee_token')->plainTextToken;
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
 
         return response()->json([
             'message'      => 'Login berhasil',
