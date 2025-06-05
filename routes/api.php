@@ -11,6 +11,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ClockRequestController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Xendit\Xendit;
 
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/index', [DashboardController::class, 'index']);
 });
 
 // Hanya bisa diakses oleh Admin
