@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/getUser', [ProfileController::class, 'getUsers']);
+    Route::get('/user', [AuthController::class, 'user']);
 });
 
 // Hanya bisa diakses oleh Admin
@@ -62,7 +62,6 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::post('/subscription/callback', [SubscriptionController::class, 'callback']); // Webhook
 
     // Detail Admin
-    Route::get('admin/user', [AuthController::class, 'user']);
     Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
 
     // Branch

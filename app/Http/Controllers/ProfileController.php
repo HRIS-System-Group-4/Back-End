@@ -165,13 +165,4 @@ class ProfileController extends Controller
             return response()->json(['message' => 'Employee profile updated successfully.']);
         }
     }
-
-    public function getUsers()
-    {
-        $users = User::select('id', 'employee_id', 'email', 'is_admin', 'created_at', 'updated_at')->get();
-
-        return response()->json([
-            'users' => $users
-        ]);
-    }
 }
