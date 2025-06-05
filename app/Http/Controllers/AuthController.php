@@ -27,11 +27,24 @@ class AuthController extends Controller
             'password' => 'required|string|confirmed|min:8',
         ]);
 
+        $firstInitial = strtolower(substr($request->first_name, 0, 1));
+        $secondInitial = strtolower(substr($request->first_name, -1, 1));
+        $thirdInitial = strtolower(substr($request->last_name, 0, 1));
+        $fourthInitial = strtolower(substr($request->last_name, -1, 1));
+
+        $prefix = $firstInitial . $secondInitial . $thirdInitial . $fourthInitial;
+
+        $existingCount = User::where('employee_id', 'like', $prefix . '%')->count();
+        $number = str_pad($existingCount + 1, 3, '0', STR_PAD_LEFT);
+
+        $employeeId = $prefix . $number;
+
         $user = User::create([
             'id' => Str::uuid(),
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'is_admin' => true,
+            'employee_id' => $employeeId,
         ]);
 
         Admin::create([
@@ -49,6 +62,7 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ], 201);
     }
+
 
     public function loginAdmin(Request $request)
     {
@@ -81,55 +95,16 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request)
-{
-    if ($request->has(['login', 'password'])) {
-        $credentials = $request->only('login', 'password');
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        $user = Auth::user();
-        $token = $user->createToken('access_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'user' => $user
-        ]);
-    }
-
-    // Login Employee
-    if ($request->has(['company', 'employee_id', 'password'])) {
-        $employee = Employee::where('company', $request->company)
-            ->where('employee_id', $request->employee_id)
-            ->first();
-
-        if (!$employee || !Hash::check($request->password, $employee->password)) {
-            return response()->json(['message' => 'Invalid employee credentials'], 401);
-        }
-
-        $token = $employee->createToken('access_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'employee' => $employee
-        ]);
-    }
-
-    return response()->json(['message' => 'Invalid request'], 400);
-}
-
-
-    public function fetchingAdmin(Request $request) {
+    public function fetchingAdmin(Request $request)
+    {
         $user = $request->user();
-    
+
         if (!$user->is_admin) {
             return response()->json(['message' => 'Anda Bukan Admin.'], 403);
         }
-    
+
         $admin = $user->admin;
-    
+
         return response()->json([
             'id' => $user->id,
             'email' => $user->email,
@@ -139,7 +114,7 @@ class AuthController extends Controller
             'is_admin' => true,
         ]);
     }
-    
+
 
     // ============================
     // === EMPLOYEE LOGIN ONLY ====
@@ -148,15 +123,15 @@ class AuthController extends Controller
     public function loginEmployee(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'company' => 'required|string',
-            'employee_id' => 'required|string',
-            'password' => 'required|string',
+            'company'      => 'required|string',
+            'employee_id'  => 'required|string',
+            'password'     => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validasi gagal',
-                'errors' => $validator->errors(),
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
@@ -165,7 +140,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Perusahaan tidak ditemukan.'], 404);
         }
 
-        $user = User::where('id', $request->employee_id)->where('is_admin', false)->first();
+        $user = User::where('employee_id', $request->employee_id)->where('is_admin', false)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'ID atau password salah.'], 401);
         }
@@ -174,15 +149,11 @@ class AuthController extends Controller
         $token = $user->createToken('employee_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login berhasil',
+            'message'      => 'Login berhasil',
             'access_token' => $token,
-            'token_type' => 'Bearer',
+            'token_type'   => 'Bearer',
         ]);
     }
-
-    // ======================
-    // === COMMON METHOD ====
-    // ======================
 
     public function logout(Request $request)
     {

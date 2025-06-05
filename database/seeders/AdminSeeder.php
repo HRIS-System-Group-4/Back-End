@@ -40,6 +40,7 @@ class AdminSeeder extends Seeder
                 'email' => 'lalasipo20@gmail.com',
                 'password' => Hash::make('password123'), // ganti sesuai kebutuhan
                 'is_admin' => true,
+                'employee_id'  => 'ADM001',
             ]);
 
             Admin::create([

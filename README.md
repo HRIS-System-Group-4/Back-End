@@ -67,3 +67,62 @@ Klik Send.
 ## Note
 
 ### Kalo error gpt dulu, aku gaiso benakne lek ga langsung
+
+admin register
+![alt text](admin-register.png)
+{
+"first_name" : "Arya",
+"last_name" : "Bagus",
+"email" : "aryabagus@gmail.com",
+"password" : "password123",
+"password_confirmation" : "password123"
+}
+
+company register postman json
+![alt text](company-register.png)
+{
+"company_name": "PT Petrokimia",
+"company_username": "Petrokimia Gresik",
+"latitude": -6.200000,
+"longitude": 106.816666,
+"location_radius": 200
+}
+
+admin aktivasi subscription
+![alt text](admin-subscription.png)
+POST http://127.0.0.1:8000/api/subscription/activate
+
+admin cek durasi subscription
+![alt text](status-subscription.png)
+GET http://127.0.0.1:8000/api/subscription/status
+
+employee clock in atau absen masuk (subscription)
+![alt text](clock-in_subscription.png)
+POST http://127.0.0.1:8000/api/clock-in
+{
+"check_clock_type": 1,
+"latitude": -6.2000,
+"longitude": 106.8214
+}
+
+employee clock out atau absen keluar (subscription)
+![alt text](clock-in_subscription.png)
+POST http://127.0.0.1:8000/api/clock-out
+{
+"check_clock_type": 2,
+"latitude": -6.2000,
+"longitude": 106.8214
+}
+
+Admin add branch
+POST http://127.0.0.1:8000/api/add-branch
+![alt text](add-branch.png)
+{
+"branch_name": "Hris Malang",
+"address": "Jl. Watu Gilang 17 C",
+"city": "Malang",
+"country": "Indonesia",
+"latitude": -6.2000000,
+"longitude": 106.8166660,
+"status": "Active"
+}

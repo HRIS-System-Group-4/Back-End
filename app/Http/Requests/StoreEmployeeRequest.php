@@ -3,20 +3,13 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreEmployeeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->is_admin(0);   // hanya admin
+        return $this->user()->is_admin;   // hanya admin
     }
-    // public function authorize(): bool
-    // {
-    //     return optional($this->user())->is_admin ?? true; // sementara izinkan semua
-    // }
-
-
 
     public function rules(): array
     {
@@ -34,10 +27,8 @@ class StoreEmployeeRequest extends FormRequest
             'branch_id'           => 'required|exists:branch,id',
             'job_title'           => 'required|string|max:50',
             'grade'               => 'required|string|max:20',
-            // 'employment_type'     => 'required|in:permanent,contract,magang,PKWT,Pegawai Tetap',
-            // 'employment_type'     => ['nullable', Rule::in(['PKWt','Pegawai Tetap','contract','honorer','magang'])],
-            'contract_type'        => 'required',
-            'sp_type'             => 'required|string|max:20',
+            'contract_type'       => 'required|in:permanent,contract,magang,PKWT,Pegawai Tetap',
+            'sp_type'             => 'nullable|string|max:20',
             // Banking
             'bank'                => 'required|string|max:50',
             'bank_account_number' => 'required|string|max:30',

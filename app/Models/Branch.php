@@ -30,6 +30,10 @@ class Branch extends Model
         'address',
         'city',
         'country',
+        'latitude',
+        'longitude',
+        'location_radius',
+        'status',
     ];
 
     /**
