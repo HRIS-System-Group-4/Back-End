@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\EmployeeResource;
 use App\Models\User;
 use App\Models\Employee;
+use App\Models\Users;
 use App\Models\Branch;
 use App\Models\CheckClockSetting;
 use App\Models\Letter;
@@ -162,5 +164,14 @@ class ProfileController extends Controller
 
             return response()->json(['message' => 'Employee profile updated successfully.']);
         }
+    }
+
+    public function getUsers()
+    {
+        $users = User::select('id', 'employee_id', 'email', 'is_admin', 'created_at', 'updated_at')->get();
+
+        return response()->json([
+            'users' => $users
+        ]);
     }
 }

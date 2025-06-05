@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/getUser', [ProfileController::class, 'getUsers']);
 });
 
 // Hanya bisa diakses oleh Admin
