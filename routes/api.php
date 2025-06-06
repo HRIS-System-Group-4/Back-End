@@ -14,6 +14,7 @@ use App\Http\Controllers\ClockRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Xendit\Xendit;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,7 @@ Route::get('/xendit-test', function () {
     Xendit::setApiKey(env('xnd_development_OyncgJmTdMtJX1QKAfcp0ZOiUo9KA9UGWdeKXn2o2QUwdmXjzCEJJZjMdebxkmQ'));
     return response()->json(['message' => 'Xendit SDK bekerja!']);
 });
+Route::post('/payments', [PaymentController::class, 'create']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'profile']);
