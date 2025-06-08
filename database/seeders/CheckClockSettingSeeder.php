@@ -42,6 +42,7 @@ class CheckClockSettingSeeder extends Seeder
                     'clock_out' => '17:00',
                     'break_start' => '12:00',
                     'break_end' => '13:00',
+                    'late_tolerance' => 15,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

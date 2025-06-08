@@ -14,6 +14,7 @@ class ClockRequest extends Model
         'user_id',
         'check_clock_type',
         'check_clock_time',
+        'date',
         'proof_path',
         'latitude',
         'longitude',

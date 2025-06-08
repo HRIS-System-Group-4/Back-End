@@ -31,7 +31,7 @@ class AutoClockOut extends Command
             CheckClock::create([
                 'id'               => (string) Str::uuid(),
                 'user_id'          => $userId,
-                'check_clock_type' => 2, // clock out
+                'check_clock_type' => 2,
                 'check_clock_time' => '00:00:00',
                 'created_at'       => Carbon::parse($yesterday . ' 23:59:59'),
                 'updated_at'       => now(),

@@ -16,11 +16,58 @@ class ClockRequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        $enhancedRequests = $requests->getCollection()->map(function ($req) {
+            $clockIn = null;
+            $clockOut = null;
+            $workHours = null;
+            $attendanceType = 'Unknown';
+
+            $clockIn = CheckClock::where('user_id', $req->user_id)
+                ->where('date', $req->date)
+                ->where('check_clock_type', 1)
+                ->first();
+
+            $clockOut = CheckClock::where('user_id', $req->user_id)
+                ->where('date', $req->date)
+                ->where('check_clock_type', 2)
+                ->first();
+
+            if ($clockIn && $clockOut) {
+                $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                $out = Carbon::createFromFormat('H:i:s', $clockOut->check_clock_time);
+                $diff = $in->diffInSeconds($out);
+                $workHours = gmdate('H:i:s', $diff);
+            }
+
+            if (in_array($req->check_clock_type, [3, 4])) {
+                $attendanceType = $req->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
+            } elseif ($clockIn) {
+                $setting = $req->user->checkClockSettingTimeForDay($req->date);
+                if ($setting) {
+                    $clockInLimit = Carbon::createFromFormat('H:i:s', $setting->clock_in)
+                        ->addMinutes($setting->late_tolerance);
+                    $clockInTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                    $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
+                } else {
+                    $attendanceType = 'On Time';
+                }
+            }
+
+            return [
+                ...$req->toArray(),
+                'work_hours' => $workHours,
+                'attendance_type' => $attendanceType,
+            ];
+        });
+
+        $requests->setCollection($enhancedRequests);
+
         return response()->json([
-            'message' => 'Daftar request clock in/out',
+            'message' => 'Daftar request check clock',
             'data' => $requests,
         ]);
     }
+
 
     public function approve($id)
     {
@@ -36,6 +83,7 @@ class ClockRequestController extends Controller
             'check_clock_type' => $request->check_clock_type,
             'check_clock_time' => $request->check_clock_time,
             'proof_path' => $request->proof_path,
+            'date' => $request->date,
         ]);
 
         $request->update(['status' => 'approved']);
@@ -57,5 +105,35 @@ class ClockRequestController extends Controller
         ]);
 
         return response()->json(['message' => 'Request berhasil ditolak.']);
+    }
+
+    public function detail($id)
+    {
+        $request = ClockRequest::with(['user.employee.branch'])->findOrFail($id);
+
+        $employee = $request->user->employee;
+        $branch = $employee?->branch;
+
+        $clockIn = CheckClock::where('user_id', $request->user_id)
+            ->where('date', $request->date)
+            ->where('check_clock_type', 1)
+            ->first();
+
+        $clockOut = CheckClock::where('user_id', $request->user_id)
+            ->where('date', $request->date)
+            ->where('check_clock_type', 2)
+            ->first();
+
+        return response()->json([
+            'message' => 'Detail kehadiran',
+            'data' => [
+                'tanggal' => $request->date,
+                'status' => $request->status,
+                'branch' => $branch?->branch_name,
+                'jalan' => $branch?->address,
+                'clock_in' => $clockIn?->check_clock_time,
+                'clock_out' => $clockOut?->check_clock_time,
+            ],
+        ]);
     }
 }

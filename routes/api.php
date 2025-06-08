@@ -83,6 +83,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::get('/clock-requests', [ClockRequestController::class, 'index']);
     Route::post('/clock-requests/{id}/approve', [ClockRequestController::class, 'approve']);
     Route::post('/clock-requests/{id}/decline', [ClockRequestController::class, 'decline']);
+    Route::get('/clock-requests/{id}/detail', [ClockRequestController::class, 'detail']);
 
     // Profile
     Route::get('/profile-admin', [ProfileController::class, 'profileAdmin']);
@@ -97,6 +98,7 @@ Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
     Route::post('/leave', [CheckClockController::class, 'leave']);
     Route::post('/absent', [CheckClockController::class, 'absent']);
     Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
+    Route::get('/check-clock/{id}', [CheckClockController::class, 'detailCheckClock']);
 
     // Profile
     Route::get('/profile-employee', [ProfileController::class, 'profile']);
