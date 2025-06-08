@@ -77,6 +77,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
+
         return response()->json([
             'message' => 'Registrasi berhasil',
             'access_token' => $token,
@@ -121,16 +125,30 @@ class AuthController extends Controller
             : User::where('id', $loginInput)->where('is_admin', true)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
-            return response()->json(['message' => 'Login gagal.'], 422);
+            return response()->json(['message' => 'Login gagal.'], 444);
         }
 
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-        ]);
+
+        ])->cookie(
+            'auth_token',
+            $token,
+            60,
+            '/',
+            null,
+            false, // false for development, true for production https
+            true,
+            false,
+            'Lax' // Lax for development, None for production https
+        );
     }
 
 
@@ -221,17 +239,30 @@ class AuthController extends Controller
 
         $user = User::where('employee_id', $request->employee_id)->where('is_admin', false)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'ID atau password salah.'], 401);
+            return response()->json(['message' => 'ID atau password salah.'], 444);
         }
 
         $user->tokens()->delete();
         $token = $user->createToken('employee_token')->plainTextToken;
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
 
         return response()->json([
             'message'      => 'Login berhasil',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-        ]);
+        ])->cookie(
+            'auth_token',
+            $token,
+            60,
+            '/',
+            null,
+            false, // false for development, true for production https
+            true,
+            false,
+            'Lax' // Lax for development, None for production https
+        );
     }
 
 
@@ -257,7 +288,17 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Berhasil logout.',
-        ]);
+        ])->cookie(
+            'auth_token',
+            '', // empty value
+            -1, // negative duration means delete cookie immediately
+            '/', // path
+            null, // domain (or specify domain if needed)
+            false, // secure flag
+            true, // httponly flag
+            false,
+            'Lax'
+        );;
     }
 
 

@@ -21,7 +21,7 @@ class StoreClockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'check_clock_type' => 'required|integer|in:1,2',   // 1 = clock-in, 2 = clock-out
+            'type' => 'required|integer|in:1,2,3,4,5',
             'proof'            => 'nullable|file|mimes:jpg,jpeg,png|max:2048', // ≤2 MB
         ];
     }
