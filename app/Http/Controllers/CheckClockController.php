@@ -26,9 +26,9 @@ class CheckClockController extends Controller
 
     public function store(StoreClockRequest $request)
     {
-        if ($this->isWeekend()) {
-            return response()->json(['message' => 'Tidak bisa melakukan clock in di hari libur (Sabtu/Minggu).'], 403);
-        }
+        // if ($this->isWeekend()) {
+        //     return response()->json(['message' => 'Tidak bisa melakukan clock in di hari libur (Sabtu/Minggu).'], 403);
+        // }
         $user = $request->user();
         $today = now()->format('Y-m-d');
 
@@ -65,9 +65,9 @@ class CheckClockController extends Controller
 
     public function clockOut(Request $request)
     {
-        if ($this->isWeekend()) {
-            return response()->json(['message' => 'Tidak bisa melakukan clock out di hari libur (Sabtu/Minggu).'], 403);
-        }
+        // if ($this->isWeekend()) {
+        //     return response()->json(['message' => 'Tidak bisa melakukan clock out di hari libur (Sabtu/Minggu).'], 403);
+        // }
 
         $user = $request->user();
         $today = now()->format('Y-m-d');
@@ -138,6 +138,7 @@ class CheckClockController extends Controller
         $today = Carbon::now();
         $dayName = $today->format('l');
 
+        // Ambil setting waktu sesuai hari
         $settingTime = DB::table('check_clock_setting_times')
             ->join('check_clock_settings', 'check_clock_settings.id', '=', 'check_clock_setting_times.ck_settings_id')
             ->where('check_clock_settings.id', $user->ck_settings_id)
@@ -152,22 +153,25 @@ class CheckClockController extends Controller
             ? Carbon::createFromFormat('H:i:s', $settingTime->clock_out)
             : null;
 
+        // Ambil clock in dan clock out dari CheckClock
         $clockIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
-            ->whereDate('created_at', $today->toDateString())
+            ->whereDate('date', $today->toDateString())
             ->first();
 
         $clockOut = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 2)
-            ->whereDate('created_at', $today->toDateString())
+            ->whereDate('date', $today->toDateString())
             ->first();
 
+        // Leave (Sick/Annual)
         $leaveRequest = ClockRequest::where('user_id', $user->id)
             ->whereIn('check_clock_type', [3, 4])
             ->where('status', 'approved')
             ->whereDate('date', $today->toDateString())
             ->first();
 
+        // Attendance type logic
         $attendanceType = 'Absent';
 
         if ($clockIn && $clockInLimit) {
@@ -178,17 +182,28 @@ class CheckClockController extends Controller
         } elseif ($clockOutTimeSetting && $today->gt($clockOutTimeSetting)) {
             $attendanceType = 'Absent';
         } else {
-            $attendanceType = 'Diluar jam kerja';
+            $attendanceType = 'Late';
         }
 
+        // Clock in & out approval requests
         $clockInRequest = ClockRequest::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('date', $today->toDateString())
-            ->orderByDesc('created_at')
+            ->latest()
             ->first();
 
-        $approvalStatus = $clockInRequest?->status ?? null;
+        $clockOutRequest = ClockRequest::where('user_id', $user->id)
+            ->where('check_clock_type', 2)
+            ->whereDate('date', $today->toDateString())
+            ->latest()
+            ->first();
 
+        $approvalStatus = [
+            'clock_in' => $clockInRequest?->status,
+            'clock_out' => $clockOutRequest?->status,
+        ];
+
+        // Work hours calculation
         $workHours = null;
         if ($clockIn && $clockOut) {
             $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
@@ -203,13 +218,12 @@ class CheckClockController extends Controller
                 'date' => $today->toDateString(),
                 'attendance_type' => $attendanceType,
                 'clock_in_time' => $clockIn?->check_clock_time,
+                'clock_out_time' => $clockOut?->check_clock_time,
                 'approval' => $approvalStatus,
                 'work_hours' => $workHours,
             ],
         ]);
     }
-
-
 
     public function leave(Request $request)
     {
