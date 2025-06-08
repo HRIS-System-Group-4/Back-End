@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('user_id', 36);
             $table->integer('check_clock_type');
             $table->time('check_clock_time');
+            $table->date('date');
             $table->string('proof_path')->nullable();
             $table->timestamps();
             $table->string('deleted_at', 30)->nullable();

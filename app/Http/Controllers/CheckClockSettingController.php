@@ -19,7 +19,7 @@ class CheckClockSettingController extends Controller
             $setting = CheckClockSetting::create([
                 'id'   => Str::uuid()->toString(),
                 'name' => $request->name,
-                'type' => $request->type, // Gunakan konstanta dari model jika perlu
+                'type' => $request->type,
             ]);
 
             foreach ($request->days as $day) {

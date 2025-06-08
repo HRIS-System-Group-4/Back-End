@@ -20,9 +20,14 @@ class StoreClockRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'type' => 'required|integer|in:1,2,3,4,5',
-            'proof'            => 'nullable|file|mimes:jpg,jpeg,png|max:2048', // ≤2 MB
+        $rules = [
+            'proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ];
+
+        if ($this->is('api/leave') || $this->input('check_clock_type') >= 3) {
+            $rules['type'] = 'required|integer|in:3,4';
+        }
+
+        return $rules;
     }
 }

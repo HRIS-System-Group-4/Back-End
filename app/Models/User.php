@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 
 class User extends Authenticatable
@@ -45,5 +47,16 @@ class User extends Authenticatable
     public function letters()
     {
         return $this->hasMany(Letter::class);
+    }
+
+    public function checkClockSettingTimeForDay($date)
+    {
+        $day = Carbon::parse($date)->format('l');
+
+        return DB::table('check_clock_setting_times')
+            ->join('check_clock_settings', 'check_clock_settings.id', '=', 'check_clock_setting_times.ck_settings_id')
+            ->where('check_clock_settings.id', $this->ck_settings_id)
+            ->where('day', $day)
+            ->first();
     }
 }
