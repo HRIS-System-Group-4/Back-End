@@ -15,7 +15,7 @@ class CheckClockSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::inRandomOrder()->take(5)->get();
+        $users = User::inRandomOrder()->take(10)->get();
 
         if ($users->isEmpty()) {
             $this->command->warn('Tidak ada user ditemukan. Jalankan UserSeeder terlebih dahulu.');
@@ -41,11 +41,10 @@ class CheckClockSeeder extends Seeder
                 'deleted_at'       => null,
             ]);
 
-            // Clock Out
             CheckClock::create([
                 'id'               => (string) Str::uuid(),
                 'user_id'          => $user->id,
-                'check_clock_type' => 2, // 2 = Clock Out
+                'check_clock_type' => 2,
                 'check_clock_time' => $clockOutTime->format('H:i:s'),
                 'date'             => $date->format('Y-m-d'),
                 'proof_path'       => 'proofs/clockout_' . rand(1, 5) . '.jpg',

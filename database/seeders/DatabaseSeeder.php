@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             SubscriptionPricingSeeder::class,
             ClockRequestSeeder::class,
+            CheckClockSeeder::class,
         ]);
     }
 }
