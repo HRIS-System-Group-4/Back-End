@@ -26,62 +26,54 @@ class CheckClockController extends Controller
 
     public function store(StoreClockRequest $request)
     {
-        // if ($this->isWeekend()) {
-        //     return response()->json(['message' => 'Tidak bisa melakukan clock in di hari libur (Sabtu/Minggu).'], 403);
-        // }
         $user = $request->user();
-        $today = now()->format('Y-m-d');
+        $today = now()->toDateString();
 
-        $alreadyRequested = ClockRequest::where('user_id', $user->id)
+        $alreadyClockedIn = CheckClock::where('user_id', $user->id)
+            ->where('check_clock_type', 1)
             ->where('date', $today)
             ->exists();
 
-        if ($alreadyRequested) {
-            return response()->json(['message' => 'Anda sudah mengajukan permintaan check clock hari ini.'], 400);
+        if ($alreadyClockedIn) {
+            return response()->json(['message' => 'Anda sudah melakukan clock in hari ini.'], 400);
         }
 
         $path = $request->file('proof')
             ? $request->file('proof')->store('proofs', 'public')
             : null;
 
-        $clockRequest = ClockRequest::create([
-            'id'               => Str::uuid()->toString(),
-            'user_id'          => $user->id,
+        $clockIn = CheckClock::create([
+            'id' => Str::uuid(),
+            'user_id' => $user->id,
             'check_clock_type' => 1,
             'check_clock_time' => $request->input('check_clock_time', now()->format('H:i:s')),
-            'date'             => $today,
-            'proof_path'       => $path,
-            'latitude'         => $request->latitude,
-            'longitude'        => $request->longitude,
-            'status'           => 'pending',
+            'date' => $today,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'proof_path' => $path,
         ]);
 
         return response()->json([
-            'message' => 'Permintaan clock in telah dikirim dan menunggu persetujuan admin.',
-            'data'    => $clockRequest,
+            'message' => 'Clock in success.',
+            'data' => $clockIn,
         ]);
     }
 
-
     public function clockOut(Request $request)
     {
-        // if ($this->isWeekend()) {
-        //     return response()->json(['message' => 'Tidak bisa melakukan clock out di hari libur (Sabtu/Minggu).'], 403);
-        // }
-
         $user = $request->user();
-        $today = now()->format('Y-m-d');
+        $today = now()->toDateString();
 
-        $alreadyClockedOut = ClockRequest::where('user_id', $user->id)
+        $alreadyClockedOut = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 2)
             ->where('date', $today)
             ->exists();
 
         if ($alreadyClockedOut) {
-            return response()->json(['message' => 'Anda sudah mengirim permintaan clock out hari ini.'], 400);
+            return response()->json(['message' => 'Anda sudah melakukan clock out hari ini.'], 400);
         }
 
-        $hasClockedIn = ClockRequest::where('user_id', $user->id)
+        $hasClockedIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->where('date', $today)
             ->exists();
@@ -94,23 +86,23 @@ class CheckClockController extends Controller
             ? $request->file('proof')->store('proofs', 'public')
             : null;
 
-        $clockRequest = ClockRequest::create([
-            'id'               => Str::uuid()->toString(),
-            'user_id'          => $user->id,
+        $clockOut = CheckClock::create([
+            'id' => Str::uuid(),
+            'user_id' => $user->id,
             'check_clock_type' => 2,
             'check_clock_time' => $request->input('check_clock_time', now()->format('H:i:s')),
-            'date'             => $today,
-            'proof_path'       => $path,
-            'latitude'         => $request->latitude,
-            'longitude'        => $request->longitude,
-            'status'           => 'pending',
+            'date' => $today,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'proof_path' => $path,
         ]);
 
         return response()->json([
-            'message' => 'Permintaan clock out telah dikirim dan menunggu persetujuan admin.',
-            'data'    => $clockRequest,
+            'message' => 'Clock out success.',
+            'data' => $clockOut,
         ]);
     }
+
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
@@ -227,10 +219,6 @@ class CheckClockController extends Controller
 
     public function leave(Request $request)
     {
-        if ($this->isWeekend()) {
-            return response()->json(['message' => 'Tidak bisa mengajukan izin di hari libur (Sabtu/Minggu).'], 403);
-        }
-
         $user = $request->user();
 
         $validated = $request->validate([
@@ -240,14 +228,27 @@ class CheckClockController extends Controller
         ]);
 
         $today = now()->format('Y-m-d');
-        $type = (int)$validated['check_clock_type'];
+        $type = (int) $validated['check_clock_type'];
+
+        $alreadyClockedIn = CheckClock::where('user_id', $user->id)
+            ->where('date', $today)
+            ->where('check_clock_type', 1)
+            ->exists();
+
+        if ($alreadyClockedIn) {
+            return response()->json([
+                'message' => 'Anda sudah melakukan clock in hari ini dan tidak bisa mengajukan cuti.',
+            ], 400);
+        }
 
         $alreadyRequested = ClockRequest::where('user_id', $user->id)
             ->where('date', $today)
             ->exists();
 
         if ($alreadyRequested) {
-            return response()->json(['message' => 'Anda sudah mengajukan permintaan check clock hari ini.'], 400);
+            return response()->json([
+                'message' => 'Anda sudah mengajukan permintaan check clock hari ini.',
+            ], 400);
         }
 
         $path = $request->file('proof')
@@ -271,12 +272,11 @@ class CheckClockController extends Controller
         ]);
     }
 
-
     public function absent(Request $request)
     {
-        if ($this->isWeekend()) {
-            return response()->json(['message' => 'Tidak bisa mengajukan absen di hari libur (Sabtu/Minggu).'], 403);
-        }
+        // if ($this->isWeekend()) {
+        //     return response()->json(['message' => 'Tidak bisa mengajukan absen di hari libur (Sabtu/Minggu).'], 403);
+        // }
 
         $user = $request->user();
         $today = now()->format('Y-m-d');

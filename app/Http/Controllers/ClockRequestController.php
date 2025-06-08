@@ -17,11 +17,6 @@ class ClockRequestController extends Controller
             ->paginate(10);
 
         $enhancedRequests = $requests->getCollection()->map(function ($req) {
-            $clockIn = null;
-            $clockOut = null;
-            $workHours = null;
-            $attendanceType = 'Unknown';
-
             $clockIn = CheckClock::where('user_id', $req->user_id)
                 ->where('date', $req->date)
                 ->where('check_clock_type', 1)
@@ -32,6 +27,7 @@ class ClockRequestController extends Controller
                 ->where('check_clock_type', 2)
                 ->first();
 
+            $workHours = null;
             if ($clockIn && $clockOut) {
                 $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
                 $out = Carbon::createFromFormat('H:i:s', $clockOut->check_clock_time);
@@ -39,6 +35,7 @@ class ClockRequestController extends Controller
                 $workHours = gmdate('H:i:s', $diff);
             }
 
+            $attendanceType = 'Unknown';
             if (in_array($req->check_clock_type, [3, 4])) {
                 $attendanceType = $req->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
             } elseif ($clockIn) {
@@ -54,9 +51,13 @@ class ClockRequestController extends Controller
             }
 
             return [
-                ...$req->toArray(),
-                'work_hours' => $workHours,
+                'employee_name'   => $req->user->name,
+                'date'            => $req->date,
+                'clock_in'        => $clockIn ? $clockIn->check_clock_time : null,
+                'clock_out'       => $clockOut ? $clockOut->check_clock_time : null,
+                'work_hours'      => $workHours,
                 'attendance_type' => $attendanceType,
+                'approval'        => $req->approval,
             ];
         });
 
