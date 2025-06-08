@@ -10,15 +10,12 @@ use Carbon\Carbon;
 
 class CheckClockSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $users = User::inRandomOrder()->take(10)->get();
+        $users = User::has('employee')->inRandomOrder()->take(10)->get();
 
         if ($users->isEmpty()) {
-            $this->command->warn('Tidak ada user ditemukan. Jalankan UserSeeder terlebih dahulu.');
+            $this->command->warn('Tidak ada user dengan employee ditemukan. Pastikan EmployeeSeeder sudah dijalankan.');
             return;
         }
 
@@ -32,7 +29,7 @@ class CheckClockSeeder extends Seeder
             CheckClock::create([
                 'id'               => (string) Str::uuid(),
                 'user_id'          => $user->id,
-                'check_clock_type' => 1, // 1 = Clock In
+                'check_clock_type' => 1,
                 'check_clock_time' => $clockInTime->format('H:i:s'),
                 'date'             => $date->format('Y-m-d'),
                 'proof_path'       => 'proofs/clockin_' . rand(1, 5) . '.jpg',
@@ -41,6 +38,7 @@ class CheckClockSeeder extends Seeder
                 'deleted_at'       => null,
             ]);
 
+            // Clock Out
             CheckClock::create([
                 'id'               => (string) Str::uuid(),
                 'user_id'          => $user->id,
@@ -53,7 +51,5 @@ class CheckClockSeeder extends Seeder
                 'deleted_at'       => null,
             ]);
         }
-
-        $this->command->info('CheckClockSeeder berhasil membuat data clock-in dan clock-out untuk 5 user.');
     }
 }

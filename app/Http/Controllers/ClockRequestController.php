@@ -13,13 +13,19 @@ use Illuminate\Support\Collection;
 class ClockRequestController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $clockRequests = ClockRequest::with('user')->get();
-        $checkClocks = CheckClock::with('user')->get();
+        $clockRequests = ClockRequest::with('user.employee')->get();
+        $checkClocks = CheckClock::with('user.employee')->get();
+
+        $usedDates = $clockRequests
+            ->filter(fn($r) => $r->status === 'approved')
+            ->map(fn($r) => $r->user_id . '|' . $r->date)
+            ->toArray();
 
         $clockRequestData = $clockRequests->map(function ($req) {
             $user = $req->user;
+            $employee = $user?->employee;
 
             $clockIn = CheckClock::where('user_id', $req->user_id)
                 ->where('date', $req->date)
@@ -55,8 +61,8 @@ class ClockRequestController extends Controller
 
             return [
                 'id' => $req->id,
-                'employee_name' => $user?->name,
-                'avatar' => $user?->avatar ?? null,
+                'employee_name' => $employee ? $employee->first_name . ' ' . $employee->last_name : null,
+                'avatar' => $employee?->avatar_path,
                 'date' => $req->date,
                 'clock_in' => $clockIn?->check_clock_time,
                 'clock_out' => $clockOut?->check_clock_time,
@@ -66,18 +72,16 @@ class ClockRequestController extends Controller
             ];
         });
 
-        $usedDates = $clockRequests
-            ->map(fn($r) => $r->user_id . '|' . $r->date)
-            ->toArray();
-
-        $checkClockData = $checkClocks->groupBy(fn($cc) => $cc->user_id . '|' . $cc->date)
-            ->reject(fn($_, $key) => in_array($key, $usedDates)) // hanya yang tidak diajukan lewat request
+        $checkClockData = $checkClocks
+            ->groupBy(fn($cc) => $cc->user_id . '|' . $cc->date)
+            ->reject(fn($_, $key) => in_array($key, $usedDates))
             ->map(function ($clocks, $key) {
                 [$userId, $date] = explode('|', $key);
                 $clockIn = $clocks->firstWhere('check_clock_type', 1);
                 $clockOut = $clocks->firstWhere('check_clock_type', 2);
 
                 $user = $clockIn?->user ?? $clockOut?->user;
+                $employee = $user?->employee;
 
                 $workHours = null;
                 if ($clockIn && $clockOut) {
@@ -88,7 +92,7 @@ class ClockRequestController extends Controller
 
                 $attendanceType = 'Unknown';
                 if ($clockIn) {
-                    $setting = $user?->checkClockSettingTimeForDay($clockIn->date);
+                    $setting = $user?->checkClockSettingTimeForDay($date);
                     if ($setting) {
                         $clockInLimit = Carbon::createFromFormat('H:i:s', $setting->clock_in)
                             ->addMinutes($setting->late_tolerance);
@@ -100,9 +104,9 @@ class ClockRequestController extends Controller
                 }
 
                 return [
-                    'id' => null,
-                    'employee_name' => $user?->name,
-                    'avatar' => $user?->avatar ?? null,
+                    'id' => $clockIn?->id ?? $clockOut?->id,
+                    'employee_name' => $employee ? $employee->first_name . ' ' . $employee->last_name : null,
+                    'avatar' => $employee?->avatar_path,
                     'date' => $date,
                     'clock_in' => $clockIn?->check_clock_time,
                     'clock_out' => $clockOut?->check_clock_time,
@@ -112,23 +116,20 @@ class ClockRequestController extends Controller
                 ];
             })->values();
 
-        $final = $clockRequestData->merge($checkClockData)->sortByDesc('date')->values();
+        $final = $clockRequestData->merge($checkClockData)
+            ->sortByDesc('date')
+            ->values();
 
         $perPage = 10;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $paged = new LengthAwarePaginator(
-            $final->forPage($currentPage, $perPage),
-            $final->count(),
-            $perPage,
-            $currentPage,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        $page = request()->get('page', 1);
+        $paged = $final->forPage($page, $perPage)->values();
 
         return response()->json([
-            'message' => 'Daftar gabungan request dan clock in/out',
+            'message' => 'Admin Check Clock Overview',
             'data' => $paged,
         ]);
     }
+
 
     public function approve($id)
     {

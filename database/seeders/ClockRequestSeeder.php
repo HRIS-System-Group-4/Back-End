@@ -15,10 +15,11 @@ class ClockRequestSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::inRandomOrder()->take(5)->get();
+        // Ambil user yang punya relasi employee saja
+        $users = User::whereHas('employee')->inRandomOrder()->take(5)->get();
 
         if ($users->isEmpty()) {
-            $this->command->warn('Tidak ada user ditemukan. Jalankan UserSeeder terlebih dahulu.');
+            $this->command->warn('Tidak ada user dengan role employee ditemukan. Jalankan UserSeeder dan pastikan ada relasi employee.');
             return;
         }
 
@@ -27,7 +28,7 @@ class ClockRequestSeeder extends Seeder
             ClockRequest::create([
                 'id'               => (string) Str::uuid(),
                 'user_id'          => $user->id,
-                'check_clock_type' => rand(3, 4), // 3 = Sick Leave, 4 = Annual Leave
+                'check_clock_type' => rand(3, 4),
                 'check_clock_time' => Carbon::createFromTime(rand(7, 9), rand(0, 59), rand(0, 59))->format('H:i:s'),
                 'date'             => Carbon::now()->subDays($i++)->format('Y-m-d'),
                 'proof_path'       => 'proofs/sample_proof_' . rand(1, 5) . '.pdf',
@@ -36,7 +37,5 @@ class ClockRequestSeeder extends Seeder
                 'status'           => ['pending', 'approved', 'rejected'][rand(0, 2)],
             ]);
         }
-
-        $this->command->info('5 data ClockRequest berhasil dibuat.');
     }
 }
