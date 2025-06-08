@@ -12,11 +12,9 @@ class ClockRequestController extends Controller
 {
     public function index()
     {
-        $requests = ClockRequest::with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        $enhancedRequests = $requests->getCollection()->map(function ($req) {
+        $clockRequests = ClockRequest::with('user')->get();
+        $checkClocks = CheckClock::with('user')->get();
+        $clockRequestData = $clockRequests->map(function ($req) {
             $clockIn = CheckClock::where('user_id', $req->user_id)
                 ->where('date', $req->date)
                 ->where('check_clock_type', 1)
@@ -52,24 +50,64 @@ class ClockRequestController extends Controller
 
             return [
                 'id' => $req->id,
-                'employee_name'   => $req->user->name,
-                'date'            => $req->date,
-                'clock_in'        => $clockIn ? $clockIn->check_clock_time : null,
-                'clock_out'       => $clockOut ? $clockOut->check_clock_time : null,
-                'work_hours'      => $workHours,
+                'employee_name' => $req->user->name,
+                'date' => $req->date,
+                'clock_in' => $clockIn?->check_clock_time,
+                'clock_out' => $clockOut?->check_clock_time,
+                'work_hours' => $workHours,
                 'attendance_type' => $attendanceType,
-                'approval'        => $req->approval,
+                'approval' => $req->approval,
             ];
         });
 
-        $requests->setCollection($enhancedRequests);
+        $usedDates = $clockRequests->map(fn($r) => $r->user_id . '|' . $r->date)->toArray();
+        $checkClockData = $checkClocks->groupBy(fn($cc) => $cc->user_id . '|' . $cc->date)
+            ->reject(fn($_, $key) => in_array($key, $usedDates))
+            ->map(function ($clocks, $key) {
+                [$userId, $date] = explode('|', $key);
+                $clockIn = $clocks->firstWhere('check_clock_type', 1);
+                $clockOut = $clocks->firstWhere('check_clock_type', 2);
+
+                $workHours = null;
+                if ($clockIn && $clockOut) {
+                    $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                    $out = Carbon::createFromFormat('H:i:s', $clockOut->check_clock_time);
+                    $diff = $in->diffInSeconds($out);
+                    $workHours = gmdate('H:i:s', $diff);
+                }
+
+                $attendanceType = 'Unknown';
+                if ($clockIn) {
+                    $setting = $clockIn->user->checkClockSettingTimeForDay($clockIn->date);
+                    if ($setting) {
+                        $clockInLimit = Carbon::createFromFormat('H:i:s', $setting->clock_in)
+                            ->addMinutes($setting->late_tolerance);
+                        $clockInTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                        $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
+                    } else {
+                        $attendanceType = 'On Time';
+                    }
+                }
+
+                return [
+                    'id' => null,
+                    'employee_name' => $clockIn?->user->name ?? $clockOut?->user->name,
+                    'date' => $date,
+                    'clock_in' => $clockIn?->check_clock_time,
+                    'clock_out' => $clockOut?->check_clock_time,
+                    'work_hours' => $workHours,
+                    'attendance_type' => $attendanceType,
+                    'approval' => null,
+                ];
+            })->values();
+
+        $final = $clockRequestData->merge($checkClockData)->sortByDesc('date')->values();
 
         return response()->json([
-            'message' => 'Daftar request check clock',
-            'data' => $requests,
+            'message' => 'Daftar gabungan request dan clock in/out',
+            'data' => $final,
         ]);
     }
-
 
     public function approve($id)
     {
