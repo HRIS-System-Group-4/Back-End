@@ -14,15 +14,15 @@ use Illuminate\Support\Facades\DB;
 
 class CheckClockController extends Controller
 {
-    private function isWeekend(): bool
-    {
-        if (app()->environment('local')) {
-            return false;
-        }
+    // private function isWeekend(): bool
+    // {
+    //     if (app()->environment('local')) {
+    //         return false;
+    //     }
 
-        $day = now()->format('l');
-        return in_array($day, ['Saturday', 'Sunday']);
-    }
+    //     $day = now()->format('l');
+    //     return in_array($day, ['Saturday', 'Sunday']);
+    // }
 
     public function store(StoreClockRequest $request)
     {
