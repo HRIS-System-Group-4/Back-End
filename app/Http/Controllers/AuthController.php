@@ -85,6 +85,23 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * @OA\Post(
+     *     path="/admin/login",
+     *     summary="Login admin",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"login", "password"},
+     *             @OA\Property(property="login", type="string", description="Email atau ID admin"),
+     *             @OA\Property(property="password", type="string", format="password")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login berhasil"),
+     *     @OA\Response(response=422, description="Login gagal atau validasi gagal")
+     * )
+     */
     public function loginAdmin(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -116,6 +133,28 @@ class AuthController extends Controller
         ]);
     }
 
+
+    /**
+     * @OA\Get(
+     *     path="/admin/fetch",
+     *     summary="Ambil data admin yang sedang login",
+     *     tags={"Auth"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data admin berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="first_name", type="string"),
+     *             @OA\Property(property="last_name", type="string"),
+     *             @OA\Property(property="full_name", type="string"),
+     *             @OA\Property(property="is_admin", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="User bukan admin")
+     * )
+     */
     public function fetchingAdmin(Request $request)
     {
         $user = $request->user();
@@ -195,6 +234,7 @@ class AuthController extends Controller
         ]);
     }
 
+
     /**
      * @OA\Post(
      *     path="/admin/logout",
@@ -202,7 +242,13 @@ class AuthController extends Controller
      *     description="Logout untuk user yang sudah login, baik admin maupun employee, menggunakan token sanctum.",
      *     tags={"Auth"},
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Berhasil logout")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Berhasil logout",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Berhasil logout.")
+     *         )
+     *     )
      * )
      */
     public function logout(Request $request)
@@ -214,14 +260,23 @@ class AuthController extends Controller
         ]);
     }
 
+
     /**
      * @OA\Get(
      *     path="/admin/user",
      *     summary="Ambil data user yang sedang login (admin atau employee)",
-     *     description="Mengambil data user yang sedang login, baik admin maupun employee, berdasarkan token sanctum.",
      *     tags={"Auth"},
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Data user berhasil diambil")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data user berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="is_admin", type="boolean"),
+     *             @OA\Property(property="name", type="string")
+     *         )
+     *     )
      * )
      */
     public function user(Request $request)

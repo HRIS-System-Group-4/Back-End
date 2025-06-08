@@ -7,9 +7,28 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use OpenApi\Annotations as OA;
 
 class BranchController extends Controller
 {
+
+      /**
+     * @OA\Get(
+     *     path="/api/branches",
+     *     summary="Menampilkan daftar cabang perusahaan",
+     *     tags={"Branch"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Berhasil menampilkan daftar cabang",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Branch overview"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Company tidak ditemukan")
+     * )
+     */
     public function overview()
     {
         $user = auth()->user();
@@ -20,7 +39,7 @@ class BranchController extends Controller
         }
 
         $branches = \App\Models\Branch::where('company_id', $admin->company_id)
-            ->select('branch_name', 'address', 'city', 'country')
+            ->select('id', 'branch_name as name', 'address', 'city', 'country', 'status',)
             ->paginate(10);
 
         return response()->json([
@@ -29,7 +48,35 @@ class BranchController extends Controller
         ]);
     }
 
-
+      /**
+     * @OA\Post(
+     *     path="/api/add-branch",
+     *     summary="Menambahkan cabang baru",
+     *     tags={"Branch"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"branch_name", "address", "city", "country", "status"},
+     *             @OA\Property(property="branch_name", type="string", example="Cabang Surabaya"),
+     *             @OA\Property(property="address", type="string", example="Jl. Raya No. 123"),
+     *             @OA\Property(property="city", type="string", example="Surabaya"),
+     *             @OA\Property(property="country", type="string", example="Indonesia"),
+     *             @OA\Property(property="latitude", type="number", format="float", example="-7.250445"),
+     *             @OA\Property(property="longitude", type="number", format="float", example="112.768845"),
+     *             @OA\Property(property="status", type="string", enum={"Active", "Inactive"}, example="Active")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Cabang berhasil ditambahkan"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Company tidak ditemukan untuk admin ini"
+     *     )
+     * )
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -67,6 +114,34 @@ class BranchController extends Controller
         ], 201);
     }
 
+
+      /**
+     * @OA\Get(
+     *     path="/api/branches/{id}",
+     *     summary="Menampilkan detail cabang berdasarkan ID",
+     *     tags={"Branch"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID UUID dari cabang",
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detail cabang berhasil ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Branch detail"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Branch tidak ditemukan"
+     *     )
+     * )
+     */
     public function show($id)
     {
         $branch = Branch::find($id);

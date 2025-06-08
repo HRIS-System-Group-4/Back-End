@@ -68,7 +68,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Login sebagai admin",
+                "summary": "Login admin",
                 "operationId": "6fd02a4c8e5d0723bf3d1954ccedb6f7",
                 "requestBody": {
                     "required": true,
@@ -81,6 +81,7 @@
                                 ],
                                 "properties": {
                                     "login": {
+                                        "description": "Email atau ID admin",
                                         "type": "string"
                                     },
                                     "password": {
@@ -98,24 +99,51 @@
                         "description": "Login berhasil"
                     },
                     "422": {
-                        "description": "Login gagal atau data tidak valid"
+                        "description": "Login gagal atau validasi gagal"
                     }
                 }
             }
         },
-        "/admin/profile": {
+        "/admin/fetch": {
             "get": {
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Ambil data admin yang login",
-                "operationId": "765d0a6c0bb0b9a0f6757751f2c00959",
+                "summary": "Ambil data admin yang sedang login",
+                "operationId": "1434f9a0432b27985b20844a2802662c",
                 "responses": {
                     "200": {
-                        "description": "Data admin berhasil diambil"
+                        "description": "Data admin berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "first_name": {
+                                            "type": "string"
+                                        },
+                                        "last_name": {
+                                            "type": "string"
+                                        },
+                                        "full_name": {
+                                            "type": "string"
+                                        },
+                                        "is_admin": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Bukan admin"
+                        "description": "User bukan admin"
                     }
                 },
                 "security": [
@@ -182,7 +210,20 @@
                 "operationId": "5490f6f73efe10a780296f44e62806ba",
                 "responses": {
                     "200": {
-                        "description": "Berhasil logout"
+                        "description": "Berhasil logout",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Berhasil logout."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -198,11 +239,31 @@
                     "Auth"
                 ],
                 "summary": "Ambil data user yang sedang login (admin atau employee)",
-                "description": "Mengambil data user yang sedang login, baik admin maupun employee, berdasarkan token sanctum.",
                 "operationId": "b0a66bffa8f791f745d551c2f01a642c",
                 "responses": {
                     "200": {
-                        "description": "Data user berhasil diambil"
+                        "description": "Data user berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "is_admin": {
+                                            "type": "boolean"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -212,30 +273,97 @@
                 ]
             }
         },
-        "/company": {
+        "/api/branches": {
+            "get": {
+                "tags": [
+                    "Branch"
+                ],
+                "summary": "Menampilkan daftar cabang perusahaan",
+                "operationId": "979c249497f07eecff17d35b89eba22c",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil menampilkan daftar cabang",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Branch overview"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Company tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/add-branch": {
             "post": {
                 "tags": [
-                    "Company"
+                    "Branch"
                 ],
-                "summary": "Membuat data perusahaan baru",
-                "operationId": "cc66eb61ef990224e42be56da6d61e29",
+                "summary": "Menambahkan cabang baru",
+                "operationId": "51236e6c1fec35e114874364c127bb24",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "company_name",
-                                    "company_username"
+                                    "branch_name",
+                                    "address",
+                                    "city",
+                                    "country",
+                                    "status"
                                 ],
                                 "properties": {
-                                    "company_name": {
+                                    "branch_name": {
                                         "type": "string",
-                                        "example": "PT Maju Mundur"
+                                        "example": "Cabang Surabaya"
                                     },
-                                    "company_username": {
+                                    "address": {
                                         "type": "string",
-                                        "example": "majumundur123"
+                                        "example": "Jl. Raya No. 123"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Surabaya"
+                                    },
+                                    "country": {
+                                        "type": "string",
+                                        "example": "Indonesia"
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": "-7.250445"
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": "112.768845"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Active",
+                                            "Inactive"
+                                        ],
+                                        "example": "Active"
                                     }
                                 },
                                 "type": "object"
@@ -245,30 +373,50 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Company berhasil dibuat.",
+                        "description": "Cabang berhasil ditambahkan"
+                    },
+                    "404": {
+                        "description": "Company tidak ditemukan untuk admin ini"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/branches/{id}": {
+            "get": {
+                "tags": [
+                    "Branch"
+                ],
+                "summary": "Menampilkan detail cabang berdasarkan ID",
+                "operationId": "c9388b859d392f0ff3b7077e95d29776",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID UUID dari cabang",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail cabang berhasil ditemukan",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Company berhasil dibuat."
+                                            "example": "Branch detail"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "example": "c2c1a7d0-3b8d-4e3d-a7e2-123456789abc"
-                                                },
-                                                "company_name": {
-                                                    "type": "string",
-                                                    "example": "PT Maju Mundur"
-                                                },
-                                                "company_username": {
-                                                    "type": "string",
-                                                    "example": "majumundur123"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -277,42 +425,13 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "Validasi gagal",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The company_username has already been taken."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "404": {
+                        "description": "Branch tidak ditemukan"
                     }
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -446,8 +565,23 @@
             "description": "Auth"
         },
         {
-            "name": "Company",
-            "description": "Company"
+            "name": "Branch",
+            "description": "Branch"
         }
-    ]
+    ],
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Gunakan format Bearer {token}",
+                "name": "Authorization",
+                "in": "header"
+            },
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
 }
