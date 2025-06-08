@@ -51,6 +51,7 @@ class ClockRequestController extends Controller
             }
 
             return [
+                'id' => $req->id,
                 'employee_name'   => $req->user->name,
                 'date'            => $req->date,
                 'clock_in'        => $clockIn ? $clockIn->check_clock_time : null,
