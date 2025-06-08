@@ -72,6 +72,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::get('/branches', [BranchController::class, 'overview']);
     Route::post('/add-branch', [BranchController::class, 'store']);
     Route::get('/branches/{id}', [BranchController::class, 'show']);
+    Route::put('/branches/{id}', [BranchController::class, 'update']);
 
     // Employee
     Route::post('/add-employees', [EmployeeController::class, 'store']);
