@@ -14,7 +14,7 @@ class SubscriptionPricingSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'name' => 'Basic Plan',
-                'price' => 50,
+                'price' => 50000,
                 'duration_in_days' => 30,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -22,7 +22,7 @@ class SubscriptionPricingSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'name' => 'Pro Plan',
-                'price' => 150,
+                'price' => 150000,
                 'duration_in_days' => 30,
                 'created_at' => now(),
                 'updated_at' => now(),

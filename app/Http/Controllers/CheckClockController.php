@@ -130,7 +130,6 @@ class CheckClockController extends Controller
         $today = Carbon::now();
         $dayName = $today->format('l');
 
-        // Ambil setting waktu sesuai hari
         $settingTime = DB::table('check_clock_setting_times')
             ->join('check_clock_settings', 'check_clock_settings.id', '=', 'check_clock_setting_times.ck_settings_id')
             ->where('check_clock_settings.id', $user->ck_settings_id)
@@ -145,7 +144,6 @@ class CheckClockController extends Controller
             ? Carbon::createFromFormat('H:i:s', $settingTime->clock_out)
             : null;
 
-        // Ambil clock in dan clock out dari CheckClock
         $clockIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('date', $today->toDateString())

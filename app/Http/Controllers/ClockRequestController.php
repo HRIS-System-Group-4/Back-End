@@ -7,16 +7,26 @@ use App\Models\CheckClock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class ClockRequestController extends Controller
 {
-    public function index()
-    {
-        $requests = ClockRequest::with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
 
-        $enhancedRequests = $requests->getCollection()->map(function ($req) {
+    public function index(Request $request)
+    {
+        $clockRequests = ClockRequest::with('user.employee')->get();
+        $checkClocks = CheckClock::with('user.employee')->get();
+
+        $usedDates = $clockRequests
+            ->filter(fn($r) => $r->status === 'approved')
+            ->map(fn($r) => $r->user_id . '|' . $r->date)
+            ->toArray();
+
+        $clockRequestData = $clockRequests->map(function ($req) {
+            $user = $req->user;
+            $employee = $user?->employee;
+
             $clockIn = CheckClock::where('user_id', $req->user_id)
                 ->where('date', $req->date)
                 ->where('check_clock_type', 1)
@@ -31,15 +41,14 @@ class ClockRequestController extends Controller
             if ($clockIn && $clockOut) {
                 $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
                 $out = Carbon::createFromFormat('H:i:s', $clockOut->check_clock_time);
-                $diff = $in->diffInSeconds($out);
-                $workHours = gmdate('H:i:s', $diff);
+                $workHours = gmdate('H:i:s', $in->diffInSeconds($out));
             }
 
             $attendanceType = 'Unknown';
             if (in_array($req->check_clock_type, [3, 4])) {
                 $attendanceType = $req->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
             } elseif ($clockIn) {
-                $setting = $req->user->checkClockSettingTimeForDay($req->date);
+                $setting = $user?->checkClockSettingTimeForDay($req->date);
                 if ($setting) {
                     $clockInLimit = Carbon::createFromFormat('H:i:s', $setting->clock_in)
                         ->addMinutes($setting->late_tolerance);
@@ -51,21 +60,73 @@ class ClockRequestController extends Controller
             }
 
             return [
-                'employee_name'   => $req->user->name,
-                'date'            => $req->date,
-                'clock_in'        => $clockIn ? $clockIn->check_clock_time : null,
-                'clock_out'       => $clockOut ? $clockOut->check_clock_time : null,
-                'work_hours'      => $workHours,
+                'id' => $req->id,
+                'employee_name' => $employee ? $employee->first_name . ' ' . $employee->last_name : null,
+                'avatar' => $employee?->avatar_path,
+                'date' => $req->date,
+                'clock_in' => $clockIn?->check_clock_time,
+                'clock_out' => $clockOut?->check_clock_time,
+                'work_hours' => $workHours,
                 'attendance_type' => $attendanceType,
-                'approval'        => $req->approval,
+                'status' => $req->status,
             ];
         });
 
-        $requests->setCollection($enhancedRequests);
+        $checkClockData = $checkClocks
+            ->groupBy(fn($cc) => $cc->user_id . '|' . $cc->date)
+            ->reject(fn($_, $key) => in_array($key, $usedDates))
+            ->map(function ($clocks, $key) {
+                [$userId, $date] = explode('|', $key);
+                $clockIn = $clocks->firstWhere('check_clock_type', 1);
+                $clockOut = $clocks->firstWhere('check_clock_type', 2);
+
+                $user = $clockIn?->user ?? $clockOut?->user;
+                $employee = $user?->employee;
+
+                $workHours = null;
+                if ($clockIn && $clockOut) {
+                    $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                    $out = Carbon::createFromFormat('H:i:s', $clockOut->check_clock_time);
+                    $workHours = gmdate('H:i:s', $in->diffInSeconds($out));
+                }
+
+                $attendanceType = 'Unknown';
+                if ($clockIn) {
+                    $setting = $user?->checkClockSettingTimeForDay($date);
+                    if ($setting) {
+                        $clockInLimit = Carbon::createFromFormat('H:i:s', $setting->clock_in)
+                            ->addMinutes($setting->late_tolerance);
+                        $clockInTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                        $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
+                    } else {
+                        $attendanceType = 'On Time';
+                    }
+                }
+
+                return [
+                    'id' => $clockIn?->id ?? $clockOut?->id,
+                    'employee_name' => $employee ? $employee->first_name . ' ' . $employee->last_name : null,
+                    'avatar' => $employee?->avatar_path,
+                    'date' => $date,
+                    'clock_in' => $clockIn?->check_clock_time,
+                    'clock_out' => $clockOut?->check_clock_time,
+                    'work_hours' => $workHours,
+                    'attendance_type' => $attendanceType,
+                    'status' => null,
+                ];
+            })->values();
+
+        $final = $clockRequestData->merge($checkClockData)
+            ->sortByDesc('date')
+            ->values();
+
+        $perPage = 10;
+        $page = request()->get('page', 1);
+        $paged = $final->forPage($page, $perPage)->values();
 
         return response()->json([
-            'message' => 'Daftar request check clock',
-            'data' => $requests,
+            'message' => 'Admin Check Clock Overview',
+            'data' => $paged,
         ]);
     }
 

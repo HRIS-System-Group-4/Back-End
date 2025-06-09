@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             CheckClockSettingSeeder::class,
             EmployeeSeeder::class,
             SubscriptionPricingSeeder::class,
+            ClockRequestSeeder::class,
+            CheckClockSeeder::class,
         ]);
     }
 }
