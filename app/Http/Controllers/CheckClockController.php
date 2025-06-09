@@ -166,16 +166,29 @@ class CheckClockController extends Controller
         // Attendance type logic
         $attendanceType = 'Absent';
 
+        // if ($clockIn && $clockInLimit) {
+        //     $clockInTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+        //     $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
+        // } elseif ($leaveRequest) {
+        //     $attendanceType = $leaveRequest->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
+        // } elseif ($clockOutTimeSetting && $today->gt($clockOutTimeSetting)) {
+        //     $attendanceType = 'Absent';
+        // } else {
+        //     $attendanceType = 'Late';
+        // }
         if ($clockIn && $clockInLimit) {
             $clockInTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
             $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
         } elseif ($leaveRequest) {
             $attendanceType = $leaveRequest->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
+        } elseif (!$clockIn && !$clockOut && !$leaveRequest) {
+            $attendanceType = 'Not Yet Clocked In';
         } elseif ($clockOutTimeSetting && $today->gt($clockOutTimeSetting)) {
             $attendanceType = 'Absent';
         } else {
             $attendanceType = 'Late';
         }
+
 
         // Clock in & out approval requests
         $clockInRequest = ClockRequest::where('user_id', $user->id)
@@ -256,14 +269,14 @@ class CheckClockController extends Controller
             : null;
 
         $clockRequest = ClockRequest::create([
-            'id'               => Str::uuid()->toString(),
-            'user_id'          => $user->id,
+            'id' => Str::uuid()->toString(),
+            'user_id' => $user->id,
             'check_clock_type' => $type,
             'check_clock_time' => now()->format('H:i:s'),
-            'date'             => $today,
-            'proof_path'       => $path,
-            'reason'           => $validated['reason'] ?? null,
-            'status'           => 'pending',
+            'date' => $today,
+            'proof_path' => $path,
+            'reason' => $validated['reason'] ?? null,
+            'status' => 'pending',
         ]);
 
         return response()->json([
@@ -291,18 +304,18 @@ class CheckClockController extends Controller
         }
 
         $clockRequest = ClockRequest::create([
-            'id'               => Str::uuid()->toString(),
-            'user_id'          => $user->id,
+            'id' => Str::uuid()->toString(),
+            'user_id' => $user->id,
             'check_clock_type' => 5,
             'check_clock_time' => now()->format('H:i:s'),
-            'date'             => now()->format('Y-m-d'),
-            'reason'           => $request->input('reason', 'Tanpa Keterangan'),
-            'status'           => 'pending',
+            'date' => now()->format('Y-m-d'),
+            'reason' => $request->input('reason', 'Tanpa Keterangan'),
+            'status' => 'pending',
         ]);
 
         return response()->json([
             'message' => 'Permintaan absen telah dikirim.',
-            'data'    => $clockRequest,
+            'data' => $clockRequest,
         ]);
     }
 
