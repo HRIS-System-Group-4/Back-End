@@ -218,6 +218,7 @@ class CheckClockController extends Controller
         return response()->json([
             'message' => 'Attendance Record',
             'data' => [
+                'id' => $clockIn?->id ?? $clockOut?->id,
                 'date' => $today->toDateString(),
                 'attendance_type' => $attendanceType,
                 'clock_in_time' => $clockIn?->check_clock_time,

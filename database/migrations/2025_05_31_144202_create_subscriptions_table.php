@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->string('id', 36)->primary();
             $table->string('admin_id', 36);
+            $table->uuid('subscription_pricing_id');
             $table->date('start_date');
             $table->date('end_date');
             $table->boolean('is_active')->default(true);
