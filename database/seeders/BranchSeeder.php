@@ -81,7 +81,5 @@ class BranchSeeder extends Seeder
                 'updated_at' => now(),
             ]));
         }
-
-        $this->command->info('Seeder untuk 5 Branch berhasil dijalankan.');
     }
 }
