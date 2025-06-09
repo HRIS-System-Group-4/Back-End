@@ -11,6 +11,8 @@ class Subscription extends Model
     protected $fillable = [
         'id',
         'admin_id',
+        'company_id',
+        'subscription_pricing_id',
         'start_date',
         'end_date',
         'is_active',

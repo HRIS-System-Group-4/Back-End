@@ -80,36 +80,35 @@ class BranchController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-
         $admin = $user->admin;
+
         if (!$admin || !$admin->company_id) {
             return response()->json(['message' => 'Company tidak ditemukan untuk admin ini.'], 404);
         }
 
-        $branchCount = Branch::where('company_id', $admin->company_id)->count();
-
-        $subscription = \App\Models\Subscription::where('admin_id', $admin->id)
+        $subscription = \App\Models\Subscription::where('company_id', $admin->company_id)
             ->where('is_active', true)
+            ->where('end_date', '>=', now())
             ->orderBy('end_date', 'desc')
             ->first();
 
-        $plan = null;
-
-        if ($subscription) {
-            $pricing = \App\Models\SubscriptionPricing::find($subscription->subscription_pricing_id ?? null);
-            $plan = $pricing ? strtolower($pricing->name) : null;
-        }
-
-        if ($plan === 'basic plan' && $branchCount >= 5) {
-            return response()->json([
-                'message' => 'Maksimal 5 cabang untuk Basic Plan telah tercapai.'
-            ], 403);
-        }
-
-        if (!$plan) {
+        if (!$subscription) {
             return response()->json([
                 'message' => 'Tidak ada paket langganan aktif.'
             ], 403);
+        }
+
+        $pricing = \App\Models\SubscriptionPricing::find($subscription->subscription_pricing_id);
+        $plan = $pricing ? strtolower($pricing->name) : null;
+
+        if ($plan === 'basic plan') {
+            $branchCount = \App\Models\Branch::where('company_id', $admin->company_id)->count();
+
+            if ($branchCount >= 5) {
+                return response()->json([
+                    'message' => 'Maksimal 5 cabang untuk Basic Plan telah tercapai.'
+                ], 403);
+            }
         }
 
         $validated = $request->validate([
@@ -139,7 +138,6 @@ class BranchController extends Controller
             'data'    => $branch
         ], 201);
     }
-
 
     /**
      * @OA\Get(

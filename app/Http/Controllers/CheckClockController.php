@@ -14,16 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class CheckClockController extends Controller
 {
-    // private function isWeekend(): bool
-    // {
-    //     if (app()->environment('local')) {
-    //         return false;
-    //     }
-
-    //     $day = now()->format('l');
-    //     return in_array($day, ['Saturday', 'Sunday']);
-    // }
-
     public function store(StoreClockRequest $request)
     {
         $user = $request->user();
@@ -154,14 +144,12 @@ class CheckClockController extends Controller
             ->whereDate('date', $today->toDateString())
             ->first();
 
-        // Leave (Sick/Annual)
         $leaveRequest = ClockRequest::where('user_id', $user->id)
             ->whereIn('check_clock_type', [3, 4])
             ->where('status', 'approved')
             ->whereDate('date', $today->toDateString())
             ->first();
 
-        // Attendance type logic
         $attendanceType = 'Absent';
 
         // if ($clockIn && $clockInLimit) {
@@ -187,8 +175,6 @@ class CheckClockController extends Controller
             $attendanceType = 'Late';
         }
 
-
-        // Clock in & out approval requests
         $clockInRequest = ClockRequest::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('date', $today->toDateString())
@@ -223,7 +209,6 @@ class CheckClockController extends Controller
                 'attendance_type' => $attendanceType,
                 'clock_in_time' => $clockIn?->check_clock_time,
                 'clock_out_time' => $clockOut?->check_clock_time,
-                // 'approval' => $approvalStatus,
                 'work_hours' => $workHours,
             ],
         ]);
@@ -286,10 +271,6 @@ class CheckClockController extends Controller
 
     public function absent(Request $request)
     {
-        // if ($this->isWeekend()) {
-        //     return response()->json(['message' => 'Tidak bisa mengajukan absen di hari libur (Sabtu/Minggu).'], 403);
-        // }
-
         $user = $request->user();
         $today = now()->format('Y-m-d');
 
@@ -329,6 +310,9 @@ class CheckClockController extends Controller
             ], 422);
         }
 
+        $employee = $user->employee;
+        $branch = $employee?->branch;
+
         $clockIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
             ->whereDate('date', $date)
@@ -339,7 +323,6 @@ class CheckClockController extends Controller
             ->whereDate('date', $date)
             ->first();
 
-        // Hitung jam kerja
         $workHours = null;
         if ($clockIn && $clockOut) {
             $in = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
@@ -347,10 +330,20 @@ class CheckClockController extends Controller
             $workHours = gmdate('H:i:s', $in->diffInSeconds($out));
         }
 
+        $attendanceType = null;
+        if ($clockIn) {
+            $threshold = Carbon::createFromTimeString('08:00:00');
+            $inTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+            $attendanceType = $inTime->lessThanOrEqualTo($threshold) ? 'On Time' : 'Late';
+        }
+
         return response()->json([
             'message' => 'Detail Check Clock',
             'data' => [
                 'date' => $date,
+                'attendance_type' => $attendanceType,
+                'branch_name' => $branch?->branch_name,
+                'branch_address' => $branch?->address,
                 'clock_in' => $clockIn ? [
                     'id' => $clockIn->id,
                     'time' => $clockIn->check_clock_time,

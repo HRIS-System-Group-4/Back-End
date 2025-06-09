@@ -50,26 +50,6 @@ class BranchSeeder extends Seeder
                 'country' => 'Indonesia',
                 'status' => 'Active',
             ],
-            [
-                'branch_name' => 'Medan Branch',
-                'location' => 'North Sumatra',
-                'latitude' => 3.595195,
-                'longitude' => 98.672222,
-                'address' => 'Jl. Gatot Subroto No. 12',
-                'city' => 'Medan',
-                'country' => 'Indonesia',
-                'status' => 'Inactive',
-            ],
-            [
-                'branch_name' => 'Denpasar Branch',
-                'location' => 'Bali',
-                'latitude' => -8.670458,
-                'longitude' => 115.212629,
-                'address' => 'Jl. Raya Puputan No. 9',
-                'city' => 'Denpasar',
-                'country' => 'Indonesia',
-                'status' => 'Inactive',
-            ],
         ];
 
         foreach ($branches as $data) {

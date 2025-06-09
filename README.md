@@ -91,6 +91,13 @@ company register postman json
 admin aktivasi subscription
 ![alt text](admin-subscription.png)
 POST http://127.0.0.1:8000/api/subscription/activate
+{
+"plan": "Basic Plan"
+}
+atau
+{
+"plan": "Pro Plan"
+}
 
 admin cek durasi subscription
 ![alt text](status-subscription.png)

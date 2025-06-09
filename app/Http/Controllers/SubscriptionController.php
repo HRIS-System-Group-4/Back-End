@@ -15,6 +15,7 @@ use Xendit\Xendit;
 
 class SubscriptionController extends Controller
 {
+
     public function activate(Request $request)
     {
         $admin = Auth::user()->admin;
@@ -23,15 +24,38 @@ class SubscriptionController extends Controller
             return response()->json(['message' => 'Admin belum memiliki perusahaan.'], 400);
         }
 
+        // Validasi input plan
+        $request->validate([
+            'plan' => 'required|string'
+        ]);
+
         $company = Company::findOrFail($admin->company_id);
 
-        $company->subscription_active = true;
-        $company->subscription_expires_at = Carbon::now()->addMonth();
-        $company->save();
+        // Ambil data pricing berdasarkan nama plan
+        $pricing = SubscriptionPricing::where('name', $request->plan)->first();
+        if (!$pricing) {
+            return response()->json(['message' => 'Paket subscription tidak ditemukan.'], 404);
+        }
+
+        // Nonaktifkan semua subscription sebelumnya agar tidak ganda
+        Subscription::where('company_id', $company->id)->update(['is_active' => false]);
+
+        // Buat subscription baru - FIXED: Added missing company_id
+        $subscription = Subscription::create([
+            'id' => Str::uuid(),
+            'company_id' => $company->id,  // ← This was missing!
+            'admin_id' => $admin->id,
+            'subscription_pricing_id' => $pricing->id,
+            'start_date' => now(),
+            'end_date' => now()->addDays($pricing->duration_in_days),
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return response()->json([
-            'message' => 'Subscription diaktifkan selama 1 bulan.',
-            'expires_at' => $company->subscription_expires_at
+            'message' => 'Subscription berhasil diaktifkan.',
+            'data' => $subscription,
         ]);
     }
 
@@ -141,9 +165,13 @@ class SubscriptionController extends Controller
                 Subscription::create([
                     'id' => Str::uuid(),
                     'admin_id' => $admin->id,
+                    'company_id' => $company->id,
+                    'subscription_pricing_id' => $invoice->pricing_id,
                     'start_date' => now()->toDateString(),
                     'end_date' => now()->addMonth()->toDateString(),
                     'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
         }

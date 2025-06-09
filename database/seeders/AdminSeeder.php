@@ -28,11 +28,6 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        // Aktifkan subscription untuk company HRIS
-        $company1->subscription_active = true;
-        $company1->subscription_expires_at = now()->addMonth();
-        $company1->save();
-
         // 2. Company tanpa subscription
         $company2 = Company::firstOrCreate(
             ['company_username' => 'nosub'],
@@ -54,7 +49,7 @@ class AdminSeeder extends Seeder
 
             User::create([
                 'id' => $userId1,
-                'email' => 'admin@hris.com',
+                'email' => 'lalasipo20@gmail.com',
                 'password' => Hash::make('password123'),
                 'is_admin' => true,
                 'employee_id' => 'ADM001',
