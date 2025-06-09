@@ -12,7 +12,7 @@ use OpenApi\Annotations as OA;
 class BranchController extends Controller
 {
 
-      /**
+    /**
      * @OA\Get(
      *     path="/api/branches",
      *     summary="Menampilkan daftar cabang perusahaan",
@@ -48,7 +48,7 @@ class BranchController extends Controller
         ]);
     }
 
-      /**
+    /**
      * @OA\Post(
      *     path="/api/add-branch",
      *     summary="Menambahkan cabang baru",
@@ -86,6 +86,32 @@ class BranchController extends Controller
             return response()->json(['message' => 'Company tidak ditemukan untuk admin ini.'], 404);
         }
 
+        $branchCount = Branch::where('company_id', $admin->company_id)->count();
+
+        $subscription = \App\Models\Subscription::where('admin_id', $admin->id)
+            ->where('is_active', true)
+            ->orderBy('end_date', 'desc')
+            ->first();
+
+        $plan = null;
+
+        if ($subscription) {
+            $pricing = \App\Models\SubscriptionPricing::find($subscription->subscription_pricing_id ?? null);
+            $plan = $pricing ? strtolower($pricing->name) : null;
+        }
+
+        if ($plan === 'basic plan' && $branchCount >= 5) {
+            return response()->json([
+                'message' => 'Maksimal 5 cabang untuk Basic Plan telah tercapai.'
+            ], 403);
+        }
+
+        if (!$plan) {
+            return response()->json([
+                'message' => 'Tidak ada paket langganan aktif.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'branch_name' => 'required|string|max:255',
             'address'     => 'required|string|max:255',
@@ -115,7 +141,7 @@ class BranchController extends Controller
     }
 
 
-      /**
+    /**
      * @OA\Get(
      *     path="/api/branches/{id}",
      *     summary="Menampilkan detail cabang berdasarkan ID",
@@ -166,8 +192,8 @@ class BranchController extends Controller
             ]
         ]);
     }
-    
-        
+
+
     /**
      * @OA\Put(
      *     path="/api/branches/{id}",
@@ -247,18 +273,18 @@ class BranchController extends Controller
     public function update(Request $request, $id)
     {
         $user = Auth::user();
-        
+
         $admin = $user->admin;
         if (!$admin || !$admin->company_id) {
             return response()->json(['message' => 'Company not found for this admin.'], 404);
         }
-        
+
         $branch = Branch::where('id', $id)->where('company_id', $admin->company_id)->first();
 
         if (!$branch) {
             return response()->json(['message' => 'Branch not found.'], 404);
         }
-        
+
         $validated = $request->validate([
             'branch_name' => 'required|string|max:255',
             'address'     => 'required|string|max:255',
@@ -278,7 +304,7 @@ class BranchController extends Controller
             'longitude'   => $validated['longitude'],
             'status'      => $validated['status'],
         ]);
-        
+
         return response()->json([
             'message' => 'Branch berhasil diperbarui.',
             'data'    => $branch

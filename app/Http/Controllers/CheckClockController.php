@@ -223,7 +223,7 @@ class CheckClockController extends Controller
                 'attendance_type' => $attendanceType,
                 'clock_in_time' => $clockIn?->check_clock_time,
                 'clock_out_time' => $clockOut?->check_clock_time,
-                'approval' => $approvalStatus,
+                // 'approval' => $approvalStatus,
                 'work_hours' => $workHours,
             ],
         ]);
@@ -318,28 +318,25 @@ class CheckClockController extends Controller
         ]);
     }
 
-    public function detailCheckClock($id)
+    public function detailCheckClock(Request $request)
     {
         $user = auth()->user();
+        $date = $request->query('date');
 
-        $checkClock = CheckClock::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if (!$checkClock) {
+        if (!$date) {
             return response()->json([
-                'message' => 'Data tidak ditemukan atau bukan milik Anda.'
-            ], 404);
+                'message' => 'Tanggal diperlukan.'
+            ], 422);
         }
 
         $clockIn = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 1)
-            ->where('date', $checkClock->date)
+            ->whereDate('date', $date)
             ->first();
 
         $clockOut = CheckClock::where('user_id', $user->id)
             ->where('check_clock_type', 2)
-            ->where('date', $checkClock->date)
+            ->whereDate('date', $date)
             ->first();
 
         // Hitung jam kerja
@@ -353,11 +350,17 @@ class CheckClockController extends Controller
         return response()->json([
             'message' => 'Detail Check Clock',
             'data' => [
-                'id' => $checkClock->id,
-                'date' => $checkClock->date,
-                'check_clock_type' => $checkClock->check_clock_type == 1 ? 'Clock In' : 'Clock Out',
-                'check_clock_time' => $checkClock->check_clock_time,
-                'proof_path' => $checkClock->proof_path,
+                'date' => $date,
+                'clock_in' => $clockIn ? [
+                    'id' => $clockIn->id,
+                    'time' => $clockIn->check_clock_time,
+                    'proof_path' => $clockIn->proof_path,
+                ] : null,
+                'clock_out' => $clockOut ? [
+                    'id' => $clockOut->id,
+                    'time' => $clockOut->check_clock_time,
+                    'proof_path' => $clockOut->proof_path,
+                ] : null,
                 'work_hours' => $workHours,
             ],
         ]);
