@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SubscriptionPricingSeeder::class,
             ClockRequestSeeder::class,
             CheckClockSeeder::class,
+            BranchSeeder::class,
         ]);
     }
 }

@@ -162,7 +162,7 @@ class ClockRequestController extends Controller
         }
 
         $request->update([
-            'status' => 'declined',
+            'status' => 'rejected',
             'admin_note' => $req->input('admin_note'),
         ]);
 
