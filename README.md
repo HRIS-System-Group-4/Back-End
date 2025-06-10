@@ -121,6 +121,14 @@ POST http://127.0.0.1:8000/api/clock-out
 "longitude": 106.8214
 }
 
+Employee mengajukan cuti sakit
+POST http://127.0.0.1:8000/api/leave
+{
+"check_clock_type" : "3",
+"start_date" : "2025-06-11",
+"end_date" : "2025-06-13"
+}
+
 Admin add branch
 POST http://127.0.0.1:8000/api/add-branch
 ![alt text](add-branch.png)
