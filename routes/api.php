@@ -72,6 +72,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::get('/branches', [BranchController::class, 'overview']);
     Route::post('/add-branch', [BranchController::class, 'store']);
     Route::get('/branches/{id}', [BranchController::class, 'show']);
+    Route::put('/branches/{id}', [BranchController::class, 'update']);
 
     // Employee
     Route::post('/add-employees', [EmployeeController::class, 'store']);
@@ -98,7 +99,7 @@ Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
     Route::post('/leave', [CheckClockController::class, 'leave']);
     Route::post('/absent', [CheckClockController::class, 'absent']);
     Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
-    Route::get('/check-clock/{id}', [CheckClockController::class, 'detailCheckClock']);
+    Route::get('/detail-check-clock', [CheckClockController::class, 'detailCheckClock']);
 
     // Profile
     Route::get('/profile-employee', [ProfileController::class, 'profile']);

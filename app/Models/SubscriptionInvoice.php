@@ -40,4 +40,9 @@ class SubscriptionInvoice extends Model
             }
         });
     }
+
+    public function pricing()
+    {
+        return $this->belongsTo(SubscriptionPricing::class, 'pricing_id');
+    }
 }

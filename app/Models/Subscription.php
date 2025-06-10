@@ -11,6 +11,8 @@ class Subscription extends Model
     protected $fillable = [
         'id',
         'admin_id',
+        'company_id',
+        'subscription_pricing_id',
         'start_date',
         'end_date',
         'is_active',
@@ -25,5 +27,10 @@ class Subscription extends Model
     {
         $now = now()->toDateString();
         return $this->is_active && $this->start_date <= $now && $this->end_date >= $now;
+    }
+
+    public function pricing()
+    {
+        return $this->belongsTo(SubscriptionPricing::class, 'subscription_pricing_id');
     }
 }
