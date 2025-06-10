@@ -7,6 +7,7 @@ use App\Models\CheckClock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -117,8 +118,17 @@ class ClockRequestController extends Controller
             })->values();
 
         $final = $clockRequestData->merge($checkClockData)
-            ->sortByDesc('date')
+            ->sort(function ($a, $b) {
+                // Urutkan berdasarkan tanggal terbaru
+                $dateComparison = strcmp($b['date'], $a['date']); // DESC
+                if ($dateComparison === 0) {
+                    // Jika tanggal sama, urutkan clock_in dari yang terbaru
+                    return strcmp($b['clock_in'] ?? '00:00:00', $a['clock_in'] ?? '00:00:00'); // DESC
+                }
+                return $dateComparison;
+            })
             ->values();
+
 
         $perPage = 10;
         $page = request()->get('page', 1);
@@ -171,6 +181,37 @@ class ClockRequestController extends Controller
 
     public function detail($id)
     {
+        $source = request()->get('source');
+
+        if ($source === 'check_clock') {
+            $clockIn = CheckClock::with(['user.employee.branch'])
+                ->where('id', $id)
+                ->where('check_clock_type', 1)
+                ->firstOrFail();
+
+            $clockOut = CheckClock::where('user_id', $clockIn->user_id)
+                ->where('date', $clockIn->date)
+                ->where('check_clock_type', 2)
+                ->first();
+
+            $employee = $clockIn->user->employee;
+            $branch = $employee?->branch;
+
+            return response()->json([
+                'message' => 'Detail kehadiran dari Check Clock',
+                'data' => [
+                    'tanggal' => $clockIn->date,
+                    'status' => null,
+                    'branch' => $branch?->branch_name,
+                    'jalan' => $branch?->address,
+                    'clock_in' => $clockIn?->check_clock_time,
+                    'clock_out' => $clockOut?->check_clock_time,
+                    'proof' => $clockIn->proof_path ? Storage::url($clockIn->proof_path) : null,
+                ],
+            ]);
+        }
+
+        // Default: dari ClockRequest
         $request = ClockRequest::with(['user.employee.branch'])->findOrFail($id);
 
         $employee = $request->user->employee;
@@ -187,7 +228,7 @@ class ClockRequestController extends Controller
             ->first();
 
         return response()->json([
-            'message' => 'Detail kehadiran',
+            'message' => 'Detail kehadiran dari Clock Request',
             'data' => [
                 'tanggal' => $request->date,
                 'status' => $request->status,
@@ -195,6 +236,7 @@ class ClockRequestController extends Controller
                 'jalan' => $branch?->address,
                 'clock_in' => $clockIn?->check_clock_time,
                 'clock_out' => $clockOut?->check_clock_time,
+                'proof' => $request->proof_path ? Storage::url($request->proof_path) : null,
             ],
         ]);
     }

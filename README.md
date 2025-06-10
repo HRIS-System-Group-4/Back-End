@@ -141,3 +141,6 @@ POST http://127.0.0.1:8000/api/add-branch
 "longitude": 106.8166660,
 "status": "Active"
 }
+
+Admin lihat detail attendance
+http://127.0.0.1:8000/api/clock-requests/{id_attendance}/detail?source=check_clock

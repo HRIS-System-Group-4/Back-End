@@ -93,6 +93,9 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
 // Hanya bisa diakses oleh Employee (bukan admin)
 Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
 
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'employeeDashboard']);
+
     // Attendance
     Route::post('/clock-in', [CheckClockController::class, 'store']);
     Route::post('/clock-out', [CheckClockController::class, 'clockOut']);

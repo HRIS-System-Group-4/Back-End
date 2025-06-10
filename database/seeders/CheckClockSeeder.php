@@ -6,6 +6,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\CheckClock;
+use App\Models\ClockRequest;
+use App\Models\CheckClockSettingTime;
 use Carbon\Carbon;
 
 class CheckClockSeeder extends Seeder
@@ -21,9 +23,31 @@ class CheckClockSeeder extends Seeder
 
         $i = 0;
         foreach ($users as $user) {
-            $date = Carbon::now()->subDays($i++);
-            $clockInTime = Carbon::createFromTime(rand(7, 8), rand(0, 59), rand(0, 59));
-            $clockOutTime = (clone $clockInTime)->addHours(8)->addMinutes(rand(0, 30));
+            $date = Carbon::now()->subDays($i++)->format('Y-m-d');
+            $dayName = Carbon::parse($date)->format('l'); // e.g. 'Monday'
+
+            // Cek apakah user ini cuti/sakit pada tanggal tsb
+            $hasLeave = ClockRequest::where('user_id', $user->id)
+                ->where('date', $date)
+                ->whereIn('check_clock_type', [3, 4]) // Sick Leave / Annual Leave
+                ->exists();
+
+            if ($hasLeave) {
+                $this->command->line("Lewatkan {$user->name} karena sedang cuti/sakit pada {$date}.");
+                continue;
+            }
+
+            // Ambil setting jam kerja untuk hari tersebut (default ke 08:00 jika tidak ditemukan)
+            $setting = CheckClockSettingTime::where('day', $dayName)->first();
+
+            $baseClockIn = $setting ? Carbon::createFromFormat('H:i:s', $setting->clock_in) : Carbon::createFromTime(8, 0, 0);
+            $toleranceMinutes = $setting ? $setting->late_tolerance : 0;
+
+            // Random clock-in antara clock_in dan clock_in + tolerance (untuk menciptakan variasi)
+            $clockInTime = (clone $baseClockIn)->addMinutes(rand(0, $toleranceMinutes + 15)); // bisa lewat toleransi juga
+
+            // Clock out 8 jam kemudian + random 0–30 menit
+            $clockOutTime = (clone $clockInTime)->addHours(8)->addMinutes(rand(0, 10));
 
             // Clock In
             CheckClock::create([
@@ -31,7 +55,7 @@ class CheckClockSeeder extends Seeder
                 'user_id'          => $user->id,
                 'check_clock_type' => 1,
                 'check_clock_time' => $clockInTime->format('H:i:s'),
-                'date'             => $date->format('Y-m-d'),
+                'date'             => $date,
                 'proof_path'       => 'proofs/clockin_' . rand(1, 5) . '.jpg',
                 'created_at'       => now(),
                 'updated_at'       => now(),
@@ -44,7 +68,7 @@ class CheckClockSeeder extends Seeder
                 'user_id'          => $user->id,
                 'check_clock_type' => 2,
                 'check_clock_time' => $clockOutTime->format('H:i:s'),
-                'date'             => $date->format('Y-m-d'),
+                'date'             => $date,
                 'proof_path'       => 'proofs/clockout_' . rand(1, 5) . '.jpg',
                 'created_at'       => now(),
                 'updated_at'       => now(),
