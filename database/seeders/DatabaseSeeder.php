@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             // SubscriptionSeeder::class,
             CheckClockSettingSeeder::class,
             EmployeeSeeder::class,
+            SubscriptionPricingSeeder::class,
             ClockRequestSeeder::class,
             CheckClockSeeder::class,
             BranchSeeder::class,

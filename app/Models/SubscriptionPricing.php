@@ -17,6 +17,7 @@ class SubscriptionPricing extends Model
         'id',
         'name',
         'price',
+        'duration_in_days',
         'duration',
         'description',
     ];

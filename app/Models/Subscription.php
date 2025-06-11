@@ -8,6 +8,7 @@ class Subscription extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
+
     protected $fillable = [
         'id',
         'admin_id',
@@ -16,6 +17,8 @@ class Subscription extends Model
         'start_date',
         'end_date',
         'is_active',
+        'created_at',
+        'updated_at',
     ];
 
     public function admin()

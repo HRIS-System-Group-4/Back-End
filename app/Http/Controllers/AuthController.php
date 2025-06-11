@@ -75,7 +75,7 @@ class AuthController extends Controller
             'last_name' => $request->last_name,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('authToken')->plainTextToken;
 
         $user->tokens()->latest()->first()->update([
             'expires_at' => now()->addHours(3),
@@ -129,10 +129,14 @@ class AuthController extends Controller
         }
 
         $user->tokens()->delete();
+
+        $token = $user->createToken('authToken')->plainTextToken;
+
         $token = $user->createToken('auth_token')->plainTextToken;
         $user->tokens()->latest()->first()->update([
             'expires_at' => now()->addHours(3),
         ]);
+
 
         return response()->json([
             'access_token' => $token,

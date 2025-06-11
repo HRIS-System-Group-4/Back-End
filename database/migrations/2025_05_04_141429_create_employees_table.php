@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('nik', 16)->unique();
             $table->string('first_name', 100);
             $table->string('last_name', 100);
-            $table->enum('employment_type', ['PKWt', 'Pegawai Tetap', 'contract', 'honorer', 'magang']);
+            $table->enum('employment_type', ['PKWt', 'Pegawai Tetap', 'contract', 'honorer', 'magang'])->nullable();
             $table->string('phone_number', 20)->nullable();
             $table->date('birth_date')->nullable();
             $table->string('birth_place', 100)->nullable();

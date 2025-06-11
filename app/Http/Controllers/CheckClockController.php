@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClockRequest;
 use App\Models\CheckClock;
+use App\Models\CheckClockSetting;
 use App\Models\Employee;
 use App\Models\ClockRequest;
 use Illuminate\Http\Request;
@@ -14,6 +15,11 @@ use Illuminate\Support\Facades\DB;
 
 class CheckClockController extends Controller
 {
+        public function index()
+    {
+        $settings = CheckClockSetting::all(['id', 'name', 'type']);
+        return response()->json($settings);
+    }
     public function store(StoreClockRequest $request)
     {
         $user = $request->user();

@@ -30,6 +30,19 @@ Route::get('/test', function () {
     return response()->json(['status' => 'ok']);
 });
 
+// Route::post('/add-employees', [EmployeeController::class, 'store']);
+
+Route::get('/test-cors', function () {
+    return response()->json(['message' => 'CORS is working']);
+});
+
+Route::options('{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
+
+// Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
+// Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+
 Route::post('/admin/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('employee/login', [AuthController::class, 'loginEmployee']);
@@ -57,6 +70,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::put('/company/{company}/location', [CompanyController::class, 'updateLocation']);
 
     // checkclock
+    Route::get('/check-clock-settings', [CheckClockSettingController::class, 'index']);
     Route::put('/check-clock-settings/{id}', [CheckClockSettingController::class, 'update']);
     Route::post('/add/check-clock-settings', [CheckClockSettingController::class, 'store']);
     Route::get('/check-clock-settings/{id}/edit', [CheckClockSettingController::class, 'edit']);
@@ -66,7 +80,8 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::post('/subscription/activate', [SubscriptionController::class, 'activate']);
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);
     Route::post('/subscription/invoice', [SubscriptionController::class, 'createInvoice']);
-    Route::post('/subscription/callback', [SubscriptionController::class, 'callback']); // Webhook
+    Route::post('/subscription/callback', [SubscriptionController::class, 'callback']);
+    Route::get('/subscription/billing', [SubscriptionController::class, 'billing']);
 
     // Detail Admin
     Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);

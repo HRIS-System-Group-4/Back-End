@@ -197,16 +197,34 @@ class ClockRequestController extends Controller
             $employee = $clockIn->user->employee;
             $branch = $employee?->branch;
 
+            // Attendance Type Logic
+            $attendanceType = 'Unknown';
+            $setting = $clockIn->user?->checkClockSettingTimeForDay($clockIn->date);
+            if ($setting) {
+                $clockInLimit = \Carbon\Carbon::createFromFormat('H:i:s', $setting->clock_in)
+                    ->addMinutes($setting->late_tolerance);
+                $clockInTime = \Carbon\Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
+            } else {
+                $attendanceType = 'On Time';
+            }
+
             return response()->json([
                 'message' => 'Detail kehadiran dari Check Clock',
                 'data' => [
-                    'tanggal' => $clockIn->date,
+                    'date' => $clockIn->date,
                     'status' => null,
                     'branch' => $branch?->branch_name,
-                    'jalan' => $branch?->address,
+                    'address' => $branch?->address,
                     'clock_in' => $clockIn?->check_clock_time,
                     'clock_out' => $clockOut?->check_clock_time,
                     'proof' => $clockIn->proof_path ? Storage::url($clockIn->proof_path) : null,
+                    'employee_name' => $employee ? $employee->first_name . ' ' . $employee->last_name : null,
+                    'email' => $clockIn->user?->email,
+                    'job_title' => $employee?->job_title,
+                    'grade' => $employee?->grade,
+                    'avatar' => $employee?->avatar_path,
+                    'attendance_type' => $attendanceType,
                 ],
             ]);
         }
@@ -227,16 +245,37 @@ class ClockRequestController extends Controller
             ->where('check_clock_type', 2)
             ->first();
 
+        $attendanceType = 'Unknown';
+        if (in_array($request->check_clock_type, [3, 4])) {
+            $attendanceType = $request->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
+        } elseif ($clockIn) {
+            $setting = $request->user?->checkClockSettingTimeForDay($request->date);
+            if ($setting) {
+                $clockInLimit = \Carbon\Carbon::createFromFormat('H:i:s', $setting->clock_in)
+                    ->addMinutes($setting->late_tolerance);
+                $clockInTime = \Carbon\Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
+            } else {
+                $attendanceType = 'On Time';
+            }
+        }
+
         return response()->json([
             'message' => 'Detail kehadiran dari Clock Request',
             'data' => [
-                'tanggal' => $request->date,
+                'date' => $request->date,
                 'status' => $request->status,
                 'branch' => $branch?->branch_name,
-                'jalan' => $branch?->address,
+                'address' => $branch?->address,
                 'clock_in' => $clockIn?->check_clock_time,
                 'clock_out' => $clockOut?->check_clock_time,
                 'proof' => $request->proof_path ? Storage::url($request->proof_path) : null,
+                'employee_name' => $employee ? $employee->first_name . ' ' . $employee->last_name : null,
+                'email' => $request->user?->email,
+                'job_title' => $employee?->job_title,
+                'grade' => $employee?->grade,
+                'avatar' => $employee?->avatar_path,
+                'attendance_type' => $attendanceType,
             ],
         ]);
     }
