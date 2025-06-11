@@ -26,6 +26,9 @@ use App\Http\Controllers\PaymentController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/test', function () {
+    return response()->json(['status' => 'ok']);
+});
 
 // Route::post('/add-employees', [EmployeeController::class, 'store']);
 
