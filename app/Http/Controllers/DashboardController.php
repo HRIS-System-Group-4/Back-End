@@ -96,8 +96,22 @@ class DashboardController extends Controller
 
         $workDays = $clockIns->pluck('date')->unique()->count();
 
-        // Hitung total jam kerja per hari
+        // Hitung total jam kerja dan overtime per hari
+        $dailyWorkData = []; // Menyimpan data per hari
+
+        // Ambil pengaturan jadwal kerja user (misal ambil satu dulu, bisa disesuaikan)
+        $settingTime = $employee->checkClockSetting?->times;
+
+        foreach ($settingTime as $daySetting) {
+            $dayName = strtolower($daySetting->day); // e.g. 'monday', 'tuesday', etc.
+            $dailyWorkData[$dayName] = [
+                'average_daily_working_hours' => null,
+                'overtime' => null
+            ];
+        }
+
         $clockData = [];
+
         foreach ($clockIns as $clockIn) {
             $clockOut = CheckClock::where('user_id', $userId)
                 ->where('check_clock_type', CheckClockSetting::TYPE_CLOCK_OUT)
@@ -109,11 +123,37 @@ class DashboardController extends Controller
                 $end = Carbon::parse($clockOut->check_clock_time);
 
                 $diffInHours = $end->diffInMinutes($start) / 60;
+
+                // Tentukan hari dari tanggal clock-in
+                $dayName = strtolower(Carbon::parse($clockIn->date)->format('l')); // 'monday', 'tuesday', etc.
+
+                if (!isset($dailyWorkData[$dayName])) {
+                    $dailyWorkData[$dayName] = [
+                        'average_daily_working_hours' => 0,
+                        'overtime' => 0,
+                        '_count' => 0
+                    ];
+                }
+
+                $dailyWorkData[$dayName]['average_daily_working_hours'] += $diffInHours;
+                $dailyWorkData[$dayName]['overtime'] += $diffInHours > 8 ? ($diffInHours - 8) : 0;
+                $dailyWorkData[$dayName]['_count'] = ($dailyWorkData[$dayName]['_count'] ?? 0) + 1;
+
                 $clockData[] = $diffInHours;
             }
         }
 
-        // Total Overtime (jam kerja > 8 jam)
+        // Finalisasi average per hari
+        foreach ($dailyWorkData as $day => $data) {
+            if (isset($data['_count'])) {
+                $count = $data['_count'];
+                $dailyWorkData[$day]['average_daily_working_hours'] = round($data['average_daily_working_hours'] / $count, 2);
+                $dailyWorkData[$day]['overtime'] = round($data['overtime'], 2);
+                unset($dailyWorkData[$day]['_count']);
+            }
+        }
+
+        // Total Overtime
         $overtimeHours = collect($clockData)
             ->filter(fn($hours) => $hours > 8)
             ->map(fn($hours) => $hours - 8)
@@ -140,6 +180,7 @@ class DashboardController extends Controller
             'total_leave_days' => $totalLeaveDays,
             'total_sick_leave_days' => $totalSickLeaveDays,
             'total_annual_leave_days' => $totalAnnualLeaveDays,
+            'daily_summary' => $dailyWorkData
         ]);
     }
 }

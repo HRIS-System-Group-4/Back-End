@@ -59,4 +59,9 @@ class User extends Authenticatable
             ->where('day', $day)
             ->first();
     }
+
+    public function checkClockSetting()
+    {
+        return $this->hasOne(CheckClockSetting::class, 'user_id');
+    }
 }
