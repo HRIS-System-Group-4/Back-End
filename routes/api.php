@@ -88,6 +88,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
 
     // Branch
+     Route::get('/branches/index', [BranchController::class, 'index']);
     Route::get('/branches', [BranchController::class, 'overview']);
     Route::post('/add-branch', [BranchController::class, 'store']);
     Route::get('/branches/{id}', [BranchController::class, 'show']);
