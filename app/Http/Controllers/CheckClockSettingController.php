@@ -74,7 +74,27 @@ class CheckClockSettingController extends Controller
     public function edit($id)
     {
         $setting = CheckClockSetting::with('times')->findOrFail($id);
-        return view('check_clock.edit', compact('setting'));
+
+        $days = $setting->times
+            ->sortBy('day')
+            ->map(function ($row) {
+                return [
+                    'day'            => $row->day,
+                    'clock_in'       => $row->clock_in,
+                    'clock_out'      => $row->clock_out,
+                    'break_start'    => $row->break_start,
+                    'break_end'      => $row->break_end,
+                    'late_tolerance' => $row->late_tolerance,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'id'   => $setting->id,
+            'name' => $setting->name,
+            'type' => $setting->type,
+            'days' => $days,
+        ]);
     }
 
     public function update(Request $request, $id)

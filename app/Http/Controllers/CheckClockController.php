@@ -15,14 +15,21 @@ use Illuminate\Support\Facades\DB;
 
 class CheckClockController extends Controller
 {
-        public function index()
+    public function index()
     {
         $settings = CheckClockSetting::all(['id', 'name', 'type']);
         return response()->json($settings);
     }
+
     public function store(StoreClockRequest $request)
     {
         $user = $request->user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return response()->json(['message' => 'Data karyawan tidak ditemukan.'], 404);
+        }
+
         $today = now()->toDateString();
 
         $alreadyClockedIn = CheckClock::where('user_id', $user->id)
@@ -34,6 +41,22 @@ class CheckClockController extends Controller
             return response()->json(['message' => 'Anda sudah melakukan clock in hari ini.'], 400);
         }
 
+        // Ambil setting jam kerja dari relasi employee -> checkClockSetting
+        $setting = $employee->checkClockSettingTimeForDay($today);
+        if (!$setting) {
+            return response()->json(['message' => 'Pengaturan jam kerja tidak ditemukan.'], 404);
+        }
+
+        $clockInTimeStr = $request->input('check_clock_time', now()->format('H:i:s'));
+        $clockInTime = Carbon::createFromFormat('H:i:s', $clockInTimeStr);
+        $scheduledClockIn = Carbon::createFromFormat('H:i:s', $setting->clock_in);
+        $earliestAcceptable = $scheduledClockIn->copy()->subMinutes(30);
+        $latestAcceptable = $scheduledClockIn->copy()->addMinutes($setting->late_tolerance);
+
+        $attendanceType = $clockInTime->between($earliestAcceptable, $latestAcceptable)
+            ? 'On Time'
+            : 'Late';
+
         $path = $request->file('proof')
             ? $request->file('proof')->store('proofs', 'public')
             : null;
@@ -42,18 +65,21 @@ class CheckClockController extends Controller
             'id' => Str::uuid(),
             'user_id' => $user->id,
             'check_clock_type' => 1,
-            'check_clock_time' => $request->input('check_clock_time', now()->format('H:i:s')),
+            'check_clock_time' => $clockInTimeStr,
             'date' => $today,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'proof_path' => $path,
+            // 'attendance_type' => $attendanceType, // aktifkan jika field ini ada
         ]);
 
         return response()->json([
             'message' => 'Clock in success.',
             'data' => $clockIn,
+            'attendance_type' => $attendanceType,
         ]);
     }
+
 
     public function clockOut(Request $request)
     {
