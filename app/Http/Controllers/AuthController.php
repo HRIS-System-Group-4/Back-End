@@ -54,7 +54,7 @@ class AuthController extends Controller
             'last_name' => $request->last_name,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('authToken')->plainTextToken;
 
         return response()->json([
             'message' => 'Registrasi berhasil',
@@ -87,7 +87,7 @@ class AuthController extends Controller
         }
 
         $user->tokens()->delete();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('authToken')->plainTextToken;
 
         return response()->json([
             'access_token' => $token,

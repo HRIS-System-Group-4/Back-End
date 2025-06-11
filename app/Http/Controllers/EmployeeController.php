@@ -27,8 +27,9 @@ class EmployeeController extends Controller
 
     public function store(StoreEmployeeRequest $request)
     {
-        dd($request->all());
+        // dd($request->all());
         Log::info('Employment type dari request: ' . $request->employment_type);
+        Log::debug('Request Data', $request->all());
 
 
         DB::beginTransaction();
@@ -143,7 +144,12 @@ class EmployeeController extends Controller
 
     public function detailEmployee($id)
     {
-        $employee = Employee::with(['branch', 'user'])->findOrFail($id);
+        // $employee = Employee::with(['branch', 'user', 'checkClockSetting:id, name'])
+        // ->where('employee_code', $id)
+        // ->firstOrFail();
+        // return new EmployeeDetailResource($employee);
+
+        $employee = Employee::with(['branch', 'user', 'checkClockSetting:id,name'])->findOrFail($id);
         return new EmployeeDetailResource($employee);
     }
 

@@ -13,23 +13,40 @@ class CheckClockSettingController extends Controller
 {
     public function store(StoreCheckClockRequest $request)
     {
+        $validated = $request->validated();
         DB::beginTransaction();
         try {
+            // $setting = CheckClockSetting::create([
+            //     'id' => Str::uuid()->toString(),
+            //     'name' => $request->name,
+            //     'type' => $request->type,
+            // ]);
             $setting = CheckClockSetting::create([
-                'id' => Str::uuid()->toString(),
-                'name' => $request->name,
-                'type' => $request->type,
+                'id'   => Str::uuid(),
+                'name' => $validated['name'],
+                'type' => $validated['type'],
             ]);
 
-            foreach ($request->days as $day) {
-                CheckClockSettingTime::create([
-                    'id' => Str::uuid()->toString(),
-                    'ck_settings_id' => $setting->id,
-                    'day' => $day['day'],
-                    'clock_in' => $day['clock_in'],
-                    'clock_out' => $day['clock_out'],
-                    'break_start' => $day['break_start'] ?? null,
-                    'break_end' => $day['break_end'] ?? null,
+            // foreach ($request->days as $day) {
+            //     CheckClockSettingTime::create([
+            //         'id' => Str::uuid()->toString(),
+            //         'ck_settings_id' => $setting->id,
+            //         'day' => $day['day'],
+            //         'clock_in' => $day['clock_in'],
+            //         'clock_out' => $day['clock_out'],
+            //         'break_start' => $day['break_start'] ?? null,
+            //         'break_end' => $day['break_end'] ?? null,
+            //         'late_tolerance' => $day['late_tolerance'] ?? 0,
+            //     ]);
+            // }
+            foreach ($validated['days'] as $day) {
+                $setting->times()->create([
+                    'id'             => Str::uuid(),
+                    'day'            => $day['day'],
+                    'clock_in'       => $day['clock_in'],
+                    'clock_out'      => $day['clock_out'],
+                    'break_start'    => $day['break_start'] ?? null,
+                    'break_end'      => $day['break_end'] ?? null,
                     'late_tolerance' => $day['late_tolerance'] ?? 0,
                 ]);
             }
