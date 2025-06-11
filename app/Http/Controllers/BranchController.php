@@ -12,6 +12,12 @@ use OpenApi\Annotations as OA;
 class BranchController extends Controller
 {
 
+    public function index()
+    {
+        return Branch::select('id', 'branch_name')->get();
+    }
+
+
     /**
      * @OA\Get(
      *     path="/api/branches",
@@ -29,6 +35,7 @@ class BranchController extends Controller
      *     @OA\Response(response=404, description="Company tidak ditemukan")
      * )
      */
+
     public function overview()
     {
         $user = auth()->user();

@@ -38,7 +38,7 @@ class Employee extends Authenticatable
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function company()
@@ -49,6 +49,11 @@ class Employee extends Authenticatable
     public function letters()
     {
         return $this->hasMany(Letter::class, 'employee_id', 'id');
+    }
+
+    public function checkClockSetting()
+    {
+        return $this->belongsTo(CheckClockSetting::class, 'ck_settings_id');
     }
 
     public function branch()

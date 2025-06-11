@@ -46,3 +46,4 @@ class SubscriptionInvoice extends Model
         return $this->belongsTo(SubscriptionPricing::class, 'pricing_id');
     }
 }
+}

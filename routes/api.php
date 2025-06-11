@@ -27,12 +27,34 @@ use App\Http\Controllers\PaymentController;
 |
 */
 
+// Route::post('/add-employees', [EmployeeController::class, 'store']);
+
+Route::get('/test-cors', function () {
+    return response()->json(['message' => 'CORS is working']);
+});
+
+Route::options('{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
+
+Route::get('/check-clock-settings/', [CheckClockController::class, 'index']);
+Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
+Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+
 Route::post('/admin/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('employee/login', [AuthController::class, 'loginEmployee']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ForgotPasswordController::class, 'reset']);
 
+// Check Clock
+Route::get('/branches/index', [BranchController::class, 'index']);
+
+// Route::post('/add-employees', [EmployeeController::class, 'store']);
+// Employee
+// Route::get('/employees', [EmployeeController::class, 'show']);
+// Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+// Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 Route::get('/xendit-test', function () {
     Xendit::setApiKey(env('xnd_development_OyncgJmTdMtJX1QKAfcp0ZOiUo9KA9UGWdeKXn2o2QUwdmXjzCEJJZjMdebxkmQ'));
     return response()->json(['message' => 'Xendit SDK bekerja!']);
@@ -57,18 +79,25 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::put('/check-clock-settings/{id}', [CheckClockSettingController::class, 'update']);
     Route::post('/add/check-clock-settings', [CheckClockSettingController::class, 'store']);
     Route::get('/check-clock-settings/{id}/edit', [CheckClockSettingController::class, 'edit']);
-    Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
+    // Route::get('/check-clock-settings/{id}', [CheckClockSettingController::class, 'show']);
+    // Route::get('/check-clock-settings/', [CheckClockController::class, 'index']);
 
     // Subscription
+    // Route::post('/subscription/activate', [SubscriptionController::class, 'activate']);
+    // Route::get('/subscription/status', [SubscriptionController::class, 'status']);
     Route::post('/subscription/activate', [SubscriptionController::class, 'activate']);
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);
     Route::post('/subscription/invoice', [SubscriptionController::class, 'createInvoice']);
+    Route::post('/subscription/callback', [SubscriptionController::class, 'callback']);
+    Route::get('/subscription/billing', [SubscriptionController::class, 'billing']);
+
     Route::post('/subscription/callback', [SubscriptionController::class, 'callback']); // Webhook
 
     // Detail Admin
     Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
 
     // Branch
+    // Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/branches', [BranchController::class, 'overview']);
     Route::post('/add-branch', [BranchController::class, 'store']);
     Route::get('/branches/{id}', [BranchController::class, 'show']);
@@ -77,6 +106,8 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     // Employee
     Route::post('/add-employees', [EmployeeController::class, 'store']);
     Route::get('/employees', [EmployeeController::class, 'show']);
+    // Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+
     Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
     Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
@@ -92,6 +123,9 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
 
 // Hanya bisa diakses oleh Employee (bukan admin)
 Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
+    // Route::get('/employees', [EmployeeController::class, 'show']);
+    // Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'employeeDashboard']);

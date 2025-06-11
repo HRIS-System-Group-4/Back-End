@@ -14,6 +14,7 @@ use App\Models\Branch;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\EmployeeDetailResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 
 class EmployeeController extends Controller
@@ -26,6 +27,11 @@ class EmployeeController extends Controller
 
     public function store(StoreEmployeeRequest $request)
     {
+        // dd($request->all());
+        Log::info('Employment type dari request: ' . $request->employment_type);
+        Log::debug('Request Data', $request->all());
+
+
         DB::beginTransaction();
 
         try {
@@ -72,7 +78,7 @@ class EmployeeController extends Controller
                 'branch_id'          => $request->branch_id,
                 'job_title'          => $request->job_title,
                 'grade'              => $request->grade,
-                'employment_type'    => $request->contract_type,
+                'employment_type'    => $request->employment_type,
                 'sp_type'            => $request->sp_type ?? null, // Optional
                 'bank_name'          => $request->bank,
                 'bank_account_no'    => $request->bank_account_number,
@@ -108,15 +114,42 @@ class EmployeeController extends Controller
     }
 
 
-    public function show()
-    {
-        $employees = Employee::with('branch')->paginate(10); // Menampilkan 10 data per halaman
-        return EmployeeResource::collection($employees);
-    }
+    // public function show()
+    // {
+    //     $employees = Employee::with('branch')->paginate(10); // Menampilkan 10 data per halaman
+    //     return EmployeeResource::collection($employees);
+    // }
+    public function show(Request $request)
+{
+    $perPage = request()->get('per_page', 10);
+    $employees = Employee::with('branch')->paginate($perPage);
+
+    return response()->json([
+    'data' => EmployeeResource::collection($employees),
+    'meta' => [
+        'current_page' => $employees->currentPage(),
+        'last_page' => $employees->lastPage(),
+        'per_page' => $employees->perPage(),
+        'total' => $employees->total(),
+    ],
+    'links' => [
+        'first' => $employees->url(1),
+        'last' => $employees->url($employees->lastPage()),
+        'prev' => $employees->previousPageUrl(),
+        'next' => $employees->nextPageUrl(),
+    ],
+]);
+
+}
 
     public function detailEmployee($id)
     {
-        $employee = Employee::with(['branch', 'user'])->findOrFail($id);
+        // $employee = Employee::with(['branch', 'user', 'checkClockSetting:id, name'])
+        // ->where('employee_code', $id)
+        // ->firstOrFail();
+        // return new EmployeeDetailResource($employee);
+
+        $employee = Employee::with(['branch', 'user', 'checkClockSetting:id,name'])->findOrFail($id);
         return new EmployeeDetailResource($employee);
     }
 
@@ -151,7 +184,7 @@ class EmployeeController extends Controller
                 'birth_date'      => $request->birth_date ?? $employee->birth_date,
                 'job_title'       => $request->job_title ?? $employee->job_title,
                 'grade'           => $request->grade ?? $employee->grade,
-                'employment_type' => $request->contract_type ?? $employee->employment_type,
+                'employment_type' => $request->employment_type ?? $employee->employment_type,
                 'sp_type'         => $request->sp_type ?? $employee->sp_type,
                 'bank_name'       => $request->bank ?? $employee->bank_name,
                 'bank_account_no' => $request->bank_account_number ?? $employee->bank_account_no,

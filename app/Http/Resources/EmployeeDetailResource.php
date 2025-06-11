@@ -14,7 +14,8 @@ class EmployeeDetailResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => ($this->user)->email,
-            'employee_id' => ($this->user)->employee_id,
+            // 'employee_id' => ($this->user)->employee_id,
+            'employee_id' => $this->user?->employee_id,
             'employment_type' => $this->employment_type,
             'phone_number' => $this->phone_number,
             'birth_date' => $this->birth_date,
@@ -29,6 +30,8 @@ class EmployeeDetailResource extends JsonResource
             'gender' => $this->gender,
             'address' => $this->address,
             'branch_name' => ($this->branch)->branch_name,
+            'check_clock_settings_name' => $this->checkClockSetting?->name,
+            'ck_settings_id'            => $this->check_clock_setting_id,
         ];
     }
 }
