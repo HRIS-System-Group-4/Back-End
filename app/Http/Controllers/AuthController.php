@@ -147,11 +147,11 @@ class AuthController extends Controller
             $token,
             60,
             '/',
-            null,
-            true, // false for development, true for production https
+            env('COOKIE_DOMAIN', null),
+            env('COOKIE_SECURE', false), // false for development, true for production https
             true,
             false,
-            'None' // Lax for development, None for production https
+            env('COOKIE_SAMESITE', 'Lax') // Lax for development, None for production https
         );
     }
 
@@ -261,11 +261,11 @@ class AuthController extends Controller
             $token,
             60,
             '/',
-            null,
-            true, // false for development, true for production https
+            env('COOKIE_DOMAIN', null),
+            env('COOKIE_SECURE', false), // false for development, true for production https
             true,
             false,
-            'None' // Lax for development, None for production https
+            env('COOKIE_SAMESITE', 'Lax') // Lax for development, None for production https
         );
     }
 
@@ -297,11 +297,11 @@ class AuthController extends Controller
             '', // empty value
             -1, // negative duration means delete cookie immediately
             '/', // path
-            'hris04.my.id', // domain (or specify domain if needed)
-            true, // secure flag
+            env('COOKIE_DOMAIN', null), // domain (or specify domain if needed)
+            env('COOKIE_SECURE', false), // secure flag
             true, // httponly flag
             false,
-            'None'
+            env('COOKIE_SAMESITE', 'Lax')
         );
     }
 
