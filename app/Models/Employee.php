@@ -60,4 +60,13 @@ class Employee extends Authenticatable
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function checkClockSettingTimeForDay($date)
+    {
+        $dayName = \Carbon\Carbon::parse($date)->format('l'); // e.g. "Monday"
+        return $this->checkClockSetting
+            ?->times()
+            ->where('day', $dayName)
+            ->first();
+    }
 }
