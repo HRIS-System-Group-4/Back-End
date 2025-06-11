@@ -42,29 +42,39 @@ class CheckClockSettingController extends Controller
             //     ]);
             // }
             foreach ($validated['days'] as $day) {
-                CheckClockSettingTime::create([
-                    'id'             => Str::uuid()->toString(),
-                    'ck_settings_id' => $setting->id,
-                    'day'            => $day['day'],
-                    'clock_in'       => $day['clock_in'],
-                    'clock_out'      => $day['clock_out'],
-                    'break_start'    => $day['break_start'] ?? null,
-                    'break_end'      => $day['break_end'] ?? null,
-                    'late_tolerance' => $day['late_tolerance'] ?? 0,
+                $setting->times()->create([
+                    'id'             => Str::uuid(),
+
+                    'id'   => Str::uuid()->toString(),
+                    'name' => $request->name,
+                    'type' => $request->type,
                 ]);
+
+                foreach ($request->days as $day) {
+                    CheckClockSettingTime::create([
+                        'id'             => Str::uuid()->toString(),
+                        'ck_settings_id' => $setting->id,
+                        'day'            => $day['day'],
+                        'clock_in'       => $day['clock_in'],
+                        'clock_out'      => $day['clock_out'],
+                        'break_start'    => $day['break_start'] ?? null,
+                        'break_end'      => $day['break_end'] ?? null,
+                        'late_tolerance' => $day['late_tolerance'] ?? 0,
+                    ]);
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Check Clock Setting created successfully.',
+                    'data'    => [
+                        'id'          => $setting->id,
+                        'name'        => $setting->name,
+                        'type'        => $setting->type,
+                        'type_label'  => $setting->type_label,
+                    ]
+                ], 201);
             }
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Check Clock Setting created successfully.',
-                'data'    => [
-                    'id'          => $setting->id,
-                    'name'        => $setting->name,
-                    'type'        => $setting->type,
-                    'type_label'  => $setting->type_label,
-                ]
-            ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
