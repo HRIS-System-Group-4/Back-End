@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('id', 36)->primary();
             $table->string('admin_id', 36);
             $table->string('company_id', 36)->nullable();
+            $table->string('company_id', 36);
             $table->uuid('subscription_pricing_id');
             $table->date('start_date');
             $table->date('end_date');

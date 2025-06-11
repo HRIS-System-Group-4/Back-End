@@ -91,6 +91,13 @@ company register postman json
 admin aktivasi subscription
 ![alt text](admin-subscription.png)
 POST http://127.0.0.1:8000/api/subscription/activate
+{
+"plan": "Basic Plan"
+}
+atau
+{
+"plan": "Pro Plan"
+}
 
 admin cek durasi subscription
 ![alt text](status-subscription.png)
@@ -114,6 +121,14 @@ POST http://127.0.0.1:8000/api/clock-out
 "longitude": 106.8214
 }
 
+Employee mengajukan cuti sakit
+POST http://127.0.0.1:8000/api/leave
+{
+"check_clock_type" : "3",
+"start_date" : "2025-06-11",
+"end_date" : "2025-06-13"
+}
+
 Admin add branch
 POST http://127.0.0.1:8000/api/add-branch
 ![alt text](add-branch.png)
@@ -126,3 +141,6 @@ POST http://127.0.0.1:8000/api/add-branch
 "longitude": 106.8166660,
 "status": "Active"
 }
+
+Admin lihat detail attendance
+http://127.0.0.1:8000/api/clock-requests/{id_attendance}/detail?source=check_clock

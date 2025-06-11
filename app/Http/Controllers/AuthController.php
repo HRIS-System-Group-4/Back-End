@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use OpenApi\Annotations as OA;
 
 class AuthController extends Controller
 {
@@ -18,6 +19,26 @@ class AuthController extends Controller
     // === ADMIN SECTION ====
     // ======================
 
+    /**
+     * @OA\Post(
+     *     path="/admin/register",
+     *     summary="Register admin baru",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"first_name","last_name","email","password","password_confirmation"},
+     *             @OA\Property(property="first_name", type="string"),
+     *             @OA\Property(property="last_name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="password", type="string", format="password"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Registrasi berhasil"),
+     *     @OA\Response(response=422, description="Validasi gagal")
+     * )
+     */
     public function register(Request $request)
     {
         $request->validate([
@@ -56,6 +77,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('authToken')->plainTextToken;
 
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
+
         return response()->json([
             'message' => 'Registrasi berhasil',
             'access_token' => $token,
@@ -64,6 +89,23 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * @OA\Post(
+     *     path="/admin/login",
+     *     summary="Login admin",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"login", "password"},
+     *             @OA\Property(property="login", type="string", description="Email atau ID admin"),
+     *             @OA\Property(property="password", type="string", format="password")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login berhasil"),
+     *     @OA\Response(response=422, description="Login gagal atau validasi gagal")
+     * )
+     */
     public function loginAdmin(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -83,18 +125,58 @@ class AuthController extends Controller
             : User::where('id', $loginInput)->where('is_admin', true)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
-            return response()->json(['message' => 'Login gagal.'], 422);
+            return response()->json(['message' => 'Login gagal.'], 444);
         }
 
         $user->tokens()->delete();
+
         $token = $user->createToken('authToken')->plainTextToken;
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
+
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-        ]);
+
+        ])->cookie(
+            'auth_token',
+            $token,
+            60,
+            '/',
+            null,
+            false, // false for development, true for production https
+            true,
+            false,
+            'Lax' // Lax for development, None for production https
+        );
     }
 
+
+    /**
+     * @OA\Get(
+     *     path="/admin/fetch",
+     *     summary="Ambil data admin yang sedang login",
+     *     tags={"Auth"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data admin berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="first_name", type="string"),
+     *             @OA\Property(property="last_name", type="string"),
+     *             @OA\Property(property="full_name", type="string"),
+     *             @OA\Property(property="is_admin", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="User bukan admin")
+     * )
+     */
     public function fetchingAdmin(Request $request)
     {
         $user = $request->user();
@@ -120,6 +202,25 @@ class AuthController extends Controller
     // === EMPLOYEE LOGIN ONLY ====
     // ============================
 
+        /**
+     * @OA\Post(
+     *     path="/employee/login",
+     *     summary="Login karyawan",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"company", "employee_id", "password"},
+     *             @OA\Property(property="company", type="string"),
+     *             @OA\Property(property="employee_id", type="string"),
+     *             @OA\Property(property="password", type="string", format="password")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login berhasil"),
+     *     @OA\Response(response=401, description="Login gagal"),
+     *     @OA\Response(response=404, description="Perusahaan tidak ditemukan")
+     * )
+     */
     public function loginEmployee(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -142,28 +243,87 @@ class AuthController extends Controller
 
         $user = User::where('employee_id', $request->employee_id)->where('is_admin', false)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'ID atau password salah.'], 401);
+            return response()->json(['message' => 'ID atau password salah.'], 444);
         }
 
         $user->tokens()->delete();
         $token = $user->createToken('employee_token')->plainTextToken;
+        $user->tokens()->latest()->first()->update([
+            'expires_at' => now()->addHours(3),
+        ]);
 
         return response()->json([
             'message'      => 'Login berhasil',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-        ]);
+        ])->cookie(
+            'auth_token',
+            $token,
+            60,
+            '/',
+            null,
+            false, // false for development, true for production https
+            true,
+            false,
+            'Lax' // Lax for development, None for production https
+        );
     }
 
+
+    /**
+     * @OA\Post(
+     *     path="/admin/logout",
+     *     summary="Logout user (admin atau employee)",
+     *     description="Logout untuk user yang sudah login, baik admin maupun employee, menggunakan token sanctum.",
+     *     tags={"Auth"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Berhasil logout",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Berhasil logout.")
+     *         )
+     *     )
+     * )
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Berhasil logout.',
-        ]);
+        ])->cookie(
+            'auth_token',
+            '', // empty value
+            -1, // negative duration means delete cookie immediately
+            '/', // path
+            null, // domain (or specify domain if needed)
+            false, // secure flag
+            true, // httponly flag
+            false,
+            'Lax'
+        );;
     }
 
+
+    /**
+     * @OA\Get(
+     *     path="/admin/user",
+     *     summary="Ambil data user yang sedang login (admin atau employee)",
+     *     tags={"Auth"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data user berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="is_admin", type="boolean"),
+     *             @OA\Property(property="name", type="string")
+     *         )
+     *     )
+     * )
+     */
     public function user(Request $request)
     {
         $user = $request->user();

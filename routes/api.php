@@ -11,6 +11,9 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ClockRequestController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
+use Xendit\Xendit;
 use App\Http\Controllers\PaymentController;
 
 /*
@@ -52,11 +55,18 @@ Route::get('/branches/index', [BranchController::class, 'index']);
 // Route::get('/employees', [EmployeeController::class, 'show']);
 // Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
 // Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+Route::get('/xendit-test', function () {
+    Xendit::setApiKey(env('xnd_development_OyncgJmTdMtJX1QKAfcp0ZOiUo9KA9UGWdeKXn2o2QUwdmXjzCEJJZjMdebxkmQ'));
+    return response()->json(['message' => 'Xendit SDK bekerja!']);
+});
+Route::post('/payments', [PaymentController::class, 'create']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    // Sementara api dibuat public buat pengujian, kalo sudah fix baru dimasukkan sanctum
-
-
+    Route::get('/profile', [ProfileController::class, 'profile']);
+    Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/index', [DashboardController::class, 'index']);
 });
 
 // Hanya bisa diakses oleh Admin
@@ -81,10 +91,9 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::post('/subscription/callback', [SubscriptionController::class, 'callback']);
     Route::get('/subscription/billing', [SubscriptionController::class, 'billing']);
 
+    Route::post('/subscription/callback', [SubscriptionController::class, 'callback']); // Webhook
 
     // Detail Admin
-    Route::post('admin/logout', [AuthController::class, 'logout']);
-    Route::get('admin/user', [AuthController::class, 'user']);
     Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
 
     // Branch
@@ -92,17 +101,24 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::get('/branches', [BranchController::class, 'overview']);
     Route::post('/add-branch', [BranchController::class, 'store']);
     Route::get('/branches/{id}', [BranchController::class, 'show']);
+    Route::put('/branches/{id}', [BranchController::class, 'update']);
 
     // Employee
     Route::post('/add-employees', [EmployeeController::class, 'store']);
     Route::get('/employees', [EmployeeController::class, 'show']);
     // Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
 
+    Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
+    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
     // Attendance Check-Clock
     Route::get('/clock-requests', [ClockRequestController::class, 'index']);
     Route::post('/clock-requests/{id}/approve', [ClockRequestController::class, 'approve']);
     Route::post('/clock-requests/{id}/decline', [ClockRequestController::class, 'decline']);
+    Route::get('/clock-requests/{id}/detail', [ClockRequestController::class, 'detail']);
+
+    // Profile
+    Route::get('/profile-admin', [ProfileController::class, 'profileAdmin']);
 });
 
 // Hanya bisa diakses oleh Employee (bukan admin)
@@ -111,8 +127,17 @@ Route::middleware(['auth:sanctum', 'employee.only'])->group(function () {
     // Route::get('/employees/{id}', [EmployeeController::class, 'detailEmployee']);
     Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'employeeDashboard']);
+
     // Attendance
     Route::post('/clock-in', [CheckClockController::class, 'store']);
     Route::post('/clock-out', [CheckClockController::class, 'clockOut']);
+    Route::post('/leave', [CheckClockController::class, 'leave']);
+    Route::post('/absent', [CheckClockController::class, 'absent']);
     Route::get('/check-clocks/records', [CheckClockController::class, 'records']);
+    Route::get('/detail-check-clock', [CheckClockController::class, 'detailCheckClock']);
+
+    // Profile
+    Route::get('/profile-employee', [ProfileController::class, 'profile']);
 });

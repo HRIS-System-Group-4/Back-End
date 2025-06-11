@@ -18,6 +18,7 @@ class SubscriptionPricing extends Model
         'name',
         'price',
         'duration_in_days',
+        'duration',
         'description',
     ];
 
@@ -36,4 +37,5 @@ class SubscriptionPricing extends Model
             }
         });
     }
+}
 }

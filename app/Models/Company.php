@@ -31,4 +31,9 @@ class Company extends Model
         'subscription_active' => 'boolean',
         'subscription_expires_at' => 'datetime',
     ];
+
+    public function admin()
+    {
+        return $this->hasOne(Admin::class, 'company_id');
+    }
 }

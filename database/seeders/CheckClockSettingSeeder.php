@@ -31,7 +31,7 @@ class CheckClockSettingSeeder extends Seeder
             ]);
 
             // Masukkan jam kerja Senin - Jumat
-            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
             foreach ($days as $day) {
                 DB::table('check_clock_setting_times')->insert([
@@ -42,6 +42,7 @@ class CheckClockSettingSeeder extends Seeder
                     'clock_out' => '17:00',
                     'break_start' => '12:00',
                     'break_end' => '13:00',
+                    'late_tolerance' => 15,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

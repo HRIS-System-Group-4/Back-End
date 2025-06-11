@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('branch', function (Blueprint $table) {
             $table->string('id', 36)->primary();
-            $table->string('company_id', 36); // Foreign key ke company
+            $table->string('company_id', 36);
             $table->string('branch_name', 255);
             $table->string('location', 255)->nullable();
             $table->decimal('latitude', 10, 7)->nullable();

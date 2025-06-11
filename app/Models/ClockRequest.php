@@ -14,6 +14,7 @@ class ClockRequest extends Model
         'user_id',
         'check_clock_type',
         'check_clock_time',
+        'date',
         'proof_path',
         'latitude',
         'longitude',
@@ -23,5 +24,10 @@ class ClockRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'user_id', 'id');
     }
 }
