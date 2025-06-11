@@ -26,6 +26,9 @@ use App\Http\Controllers\PaymentController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/test', function () {
+    return response()->json(['status' => 'ok']);
+});
 
 Route::post('/admin/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'loginAdmin']);

@@ -1,0 +1,44 @@
+name: Build and Push HRIS App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t troyy99/hris-app:latest .
+          docker push troyy99/hris-app:latest
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            docker pull troyy99/hris-app:latest
+            docker stop hris-app || true
+            docker rm hris-app || true
+            docker run -d --name hris-app --network hris-net \
+              -e DB_CONNECTION=mysql \
+              -e DB_HOST=mysql-hris \
+              -e DB_PORT=3306 \
+              -e DB_DATABASE=hris_db \
+              -e DB_USERNAME=laravel \
+              -e DB_PASSWORD=laravel123 \
+              troyy99/hris-app:latest
