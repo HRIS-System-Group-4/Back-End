@@ -50,6 +50,17 @@ class CheckClockSettingController extends Controller
                     'type' => $request->type,
                 ]);
 
+            return response()->json([
+                'message' => 'Check Clock Setting created successfully.',
+                'data'    => [
+                    'id'          => $setting->id,
+                    'name'        => $setting->name,
+                    'type'        => $setting->type,
+                    'type_label'  => $setting->type_label,
+                ]
+            ], 201);
+        } 
+    }   catch (\Exception $e) {
                 foreach ($request->days as $day) {
                     CheckClockSettingTime::create([
                         'id'             => Str::uuid()->toString(),
@@ -79,7 +90,7 @@ class CheckClockSettingController extends Controller
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
-    }
+}
 
     public function edit($id)
     {
@@ -178,3 +189,4 @@ class CheckClockSettingController extends Controller
         ]);
     }
 }
+

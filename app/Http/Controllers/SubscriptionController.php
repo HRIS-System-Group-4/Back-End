@@ -26,10 +26,13 @@ class SubscriptionController extends Controller
         }
 
         // Validasi input plan
-        $request->validate([
-            'plan' => 'required|string'
-        ]);
+        // $request->validate([
+        //     'plan' => 'required|string'
+        // ]);
 
+        $request->validate([
+            'pricing_id' => 'required|exists:subscription_pricings,id',
+        ]);
         $company = Company::findOrFail($admin->company_id);
 
         // Ambil data pricing berdasarkan nama plan
@@ -298,6 +301,12 @@ class SubscriptionController extends Controller
             'data' => $invoices,
         ]);
     }
+    public function plans(Request $request)
+    {
+        $plans = SubscriptionPricing::select('id', 'name')->get();
+
+        return response()->json($plans);
+    }
 
 
     // public function __construct()
@@ -404,3 +413,4 @@ class SubscriptionController extends Controller
     //     return response()->json(['message' => 'Status diperbarui'], 200);
     // }
 }
+    
