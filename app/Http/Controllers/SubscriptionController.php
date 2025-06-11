@@ -26,10 +26,13 @@ class SubscriptionController extends Controller
         }
 
         // Validasi input plan
-        $request->validate([
-            'plan' => 'required|string'
-        ]);
+        // $request->validate([
+        //     'plan' => 'required|string'
+        // ]);
 
+        $request->validate([
+            'pricing_id' => 'required|exists:subscription_pricings,id',
+        ]);
         $company = Company::findOrFail($admin->company_id);
 
         // Ambil data pricing berdasarkan nama plan
@@ -298,110 +301,12 @@ class SubscriptionController extends Controller
             'data' => $invoices,
         ]);
     }
+    public function plans(Request $request)
+    {
+        $plans = SubscriptionPricing::select('id', 'name')->get();
 
+        return response()->json($plans);
+    }
 
 }
-    public function __construct()
-    {
-        Xendit::setApiKey(env('XENDIT_SECRET_API_KEY')); // ← ini benar
-    }
-
-    public function createInvoice(Request $request)
-    {
-        // Set API Key secara langsung — sesuai kode yang berhasil kamu buat sebelumnya
-        Xendit::setApiKey("xnd_development_BlVqJXRLe3bKwcjpBVrczC90VCo4g78apHnSIFYyTOYPu7YDGp9YxiVEfIL3cnj0");
-
-        $request->validate([
-            'company_id'  => 'required|exists:company,id',
-            'pricing_id'  => 'required|exists:subscription_pricings,id',
-            'payer_email' => 'required|email',
-        ]);
-
-        $company = Company::findOrFail($request->company_id);
-        $pricing = SubscriptionPricing::findOrFail($request->pricing_id);
-        $externalId = 'invoice-' . Str::uuid();
-
-        try {
-            $invoice = \Xendit\Invoice::create([
-                'external_id' => $externalId,
-                'payer_email' => $request->payer_email,
-                'description' => $pricing->description ?? 'Subscription Payment',
-                'amount' => $pricing->price,
-                'invoice_duration' => 3600,
-                'redirect_url' => url('/subscription/success'), // atau bisa juga 'https://google.com' untuk testing
-            ]);
-
-            $subscriptionInvoice = SubscriptionInvoice::create([
-                'company_id'        => $company->id,
-                'pricing_id'        => $pricing->id,
-                'xendit_invoice_id' => $invoice['id'],
-                'status'            => $invoice['status'],
-                'amount'            => $invoice['amount'],
-                'invoice_url'       => $invoice['invoice_url'],
-                'expires_at'        => now()->addSeconds(3600), // kamu bisa gunakan expiry_date jika ada
-            ]);
-
-            return response()->json([
-                'message' => 'Invoice berhasil dibuat',
-                'invoice_url' => $invoice['invoice_url'],
-                'invoice' => $subscriptionInvoice,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Gagal membuat invoice',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function callback(Request $request)
-    {
-        $payload = $request->all();
-
-        $invoice = SubscriptionInvoice::where('xendit_invoice_id', $payload['id'] ?? null)->first();
-
-        if (!$invoice) {
-            return response()->json(['message' => 'Invoice tidak ditemukan'], 404);
-        }
-
-        // Update status invoice
-        $invoice->update([
-            'status' => $payload['status'] ?? $invoice->status,
-        ]);
-
-        // Jika invoice sudah dibayar, buat subscription baru
-        if (($payload['status'] ?? null) === 'PAID') {
-            $company = Company::find($invoice->company_id);
-
-            if ($company && $company->admin) {
-                $admin = $company->admin;
-
-                // Cek apakah admin sudah punya subscription aktif
-                $existing = Subscription::where('admin_id', $admin->id)
-                    ->where('is_active', true)
-                    ->first();
-
-                // Deaktivasi yang lama jika ada
-                if ($existing) {
-                    $existing->is_active = false;
-                    $existing->save();
-                }
-
-                // Buat subscription baru
-                Subscription::create([
-                    'id' => Str::uuid(),
-                    'admin_id' => $admin->id,
-                    'company_id' => $company->id,
-                    'subscription_pricing_id' => $invoice->pricing_id,
-                    'start_date' => now()->toDateString(),
-                    'end_date' => now()->addMonth()->toDateString(),
-                    'is_active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
-
-        return response()->json(['message' => 'Status diperbarui'], 200);
-    }
-}
+    

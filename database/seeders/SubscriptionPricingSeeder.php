@@ -30,4 +30,4 @@ class SubscriptionPricingSeeder extends Seeder
         ]);
     }
 }
-}
+

@@ -74,11 +74,12 @@ class CheckClockSettingController extends Controller
                     'type_label'  => $setting->type_label,
                 ]
             ], 201);
-        } catch (\Exception $e) {
+        } 
+    }   catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
-    }
+}
 
     public function edit($id)
     {
@@ -166,3 +167,4 @@ class CheckClockSettingController extends Controller
         ]);
     }
 }
+

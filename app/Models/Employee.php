@@ -60,9 +60,4 @@ class Employee extends Authenticatable
     {
         return $this->belongsTo(Branch::class);
     }
-
-    public function checkClockSetting()
-    {
-        return $this->belongsTo(CheckClockSetting::class, 'ck_settings_id');
-    }
 }

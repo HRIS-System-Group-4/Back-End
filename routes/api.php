@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::post('/subscription/invoice', [SubscriptionController::class, 'createInvoice']);
     Route::post('/subscription/callback', [SubscriptionController::class, 'callback']);
     Route::get('/subscription/billing', [SubscriptionController::class, 'billing']);
+    Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
 
     Route::post('/subscription/callback', [SubscriptionController::class, 'callback']); // Webhook
 

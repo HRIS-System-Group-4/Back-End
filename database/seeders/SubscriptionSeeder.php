@@ -30,4 +30,4 @@ class SubscriptionSeeder extends Seeder
     //     }
     // }
 }
-}
+
