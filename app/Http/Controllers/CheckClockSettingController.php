@@ -113,6 +113,7 @@ class CheckClockSettingController extends Controller
             ->sortBy('day')
             ->mapWithKeys(fn($row) => [
                 $row->day => [
+                    'type'       => $setting->type,
                     'clock_in'       => $row->clock_in,
                     'clock_out'      => $row->clock_out,
                     'break_start'    => $row->break_start,
@@ -125,29 +126,19 @@ class CheckClockSettingController extends Controller
             'id'         => $setting->id,
             'name'       => $setting->name,
             'type'       => $setting->type,
-            'type_label' => $setting->type_label,
+            // 'type_label' => $setting->type_label,
             'days'       => $setting->times,
         ]);
     }
 
     public function index()
     {
-        $settings = CheckClockSetting::with('times')->get()->map(function ($setting) {
+        $settings = CheckClockSetting::with(['times', 'employees'])->get()->map(function ($setting) {
             return [
-                'id'         => $setting->id,
-                'name'       => $setting->name,
-                'type'       => $setting->type,
-                'type_label' => $setting->type_label,
-                'days'       => $setting->times->sortBy('day')->map(function ($row) {
-                    return [
-                        'day'            => $row->day,
-                        'clock_in'       => $row->clock_in,
-                        'clock_out'      => $row->clock_out,
-                        'break_start'    => $row->break_start,
-                        'break_end'      => $row->break_end,
-                        'late_tolerance' => $row->late_tolerance,
-                    ];
-                })->values(),
+                'id'              => $setting->id,
+                'name'            => $setting->name,
+                'type'            => $setting->type,
+                'total_employees' => $setting->employees->count(),
             ];
         });
 
