@@ -148,10 +148,10 @@ class AuthController extends Controller
             60,
             '/',
             null,
-            false, // false for development, true for production https
+            true, // false for development, true for production https
             true,
             false,
-            'Lax' // Lax for development, None for production https
+            'None' // Lax for development, None for production https
         );
     }
 
@@ -262,10 +262,10 @@ class AuthController extends Controller
             60,
             '/',
             null,
-            false, // false for development, true for production https
+            true, // false for development, true for production https
             true,
             false,
-            'Lax' // Lax for development, None for production https
+            'None' // Lax for development, None for production https
         );
     }
 
@@ -297,12 +297,12 @@ class AuthController extends Controller
             '', // empty value
             -1, // negative duration means delete cookie immediately
             '/', // path
-            null, // domain (or specify domain if needed)
-            false, // secure flag
+            'hris04.my.id', // domain (or specify domain if needed)
+            true, // secure flag
             true, // httponly flag
             false,
-            'Lax'
-        );;
+            'None'
+        );
     }
 
 
