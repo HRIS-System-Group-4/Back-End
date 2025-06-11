@@ -42,15 +42,6 @@ class CheckClockSettingController extends Controller
             //     ]);
             // }
             foreach ($validated['days'] as $day) {
-                $setting->times()->create([
-                    'id'             => Str::uuid(),
-
-                'id'   => Str::uuid()->toString(),
-                'name' => $request->name,
-                'type' => $request->type,
-            ]);
-
-            foreach ($request->days as $day) {
                 CheckClockSettingTime::create([
                     'id'             => Str::uuid()->toString(),
                     'ck_settings_id' => $setting->id,
