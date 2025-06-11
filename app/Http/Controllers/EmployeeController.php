@@ -35,21 +35,17 @@ class EmployeeController extends Controller
         DB::beginTransaction();
 
         try {
-            // Cari branch dan company
             $branch = Branch::findOrFail($request->branch_id);
             $company = $branch->company;
 
-            // Buat employee_id berdasarkan prefix company dan nomor urut
-            $companyName = $company->company_username; // Misalnya: "OpenAI"
-            $prefix = strtoupper(substr($companyName, 0, 3)); // "OPE"
+            $companyName = $company->company_username;
+            $prefix = strtoupper(substr($companyName, 0, 3));
             $employeeCount = Employee::where('company_id', $company->id)->count();
-            $nextNumber = str_pad($employeeCount + 1, 3, '0', STR_PAD_LEFT); // "001"
-            $employeeShortId = "{$prefix}-{$nextNumber}"; // contoh: "OPE-001"
+            $nextNumber = str_pad($employeeCount + 1, 3, '0', STR_PAD_LEFT);
+            $employeeShortId = "{$prefix}-{$nextNumber}";
 
-            // Generate password acak
             $plainPassword = Str::random(8);
 
-            // Buat user
             $user = User::create([
                 'id'          => Str::uuid(),
                 'email'       => $request->email,
@@ -120,27 +116,26 @@ class EmployeeController extends Controller
     //     return EmployeeResource::collection($employees);
     // }
     public function show(Request $request)
-{
-    $perPage = request()->get('per_page', 10);
-    $employees = Employee::with('branch')->paginate($perPage);
+    {
+        $perPage = request()->get('per_page', 10);
+        $employees = Employee::with('branch')->paginate($perPage);
 
-    return response()->json([
-    'data' => EmployeeResource::collection($employees),
-    'meta' => [
-        'current_page' => $employees->currentPage(),
-        'last_page' => $employees->lastPage(),
-        'per_page' => $employees->perPage(),
-        'total' => $employees->total(),
-    ],
-    'links' => [
-        'first' => $employees->url(1),
-        'last' => $employees->url($employees->lastPage()),
-        'prev' => $employees->previousPageUrl(),
-        'next' => $employees->nextPageUrl(),
-    ],
-]);
-
-}
+        return response()->json([
+            'data' => EmployeeResource::collection($employees),
+            'meta' => [
+                'current_page' => $employees->currentPage(),
+                'last_page' => $employees->lastPage(),
+                'per_page' => $employees->perPage(),
+                'total' => $employees->total(),
+            ],
+            'links' => [
+                'first' => $employees->url(1),
+                'last' => $employees->url($employees->lastPage()),
+                'prev' => $employees->previousPageUrl(),
+                'next' => $employees->nextPageUrl(),
+            ],
+        ]);
+    }
 
     public function detailEmployee($id)
     {

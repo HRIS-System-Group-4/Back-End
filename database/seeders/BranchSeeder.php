@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
 use App\Models\Branch;
 use App\Models\Company;
 
@@ -12,10 +11,10 @@ class BranchSeeder extends Seeder
 {
     public function run(): void
     {
-        $company = Company::inRandomOrder()->first();
+        $companies = Company::all();
 
-        if (!$company) {
-            $this->command->warn('Tidak ada company ditemukan. Jalankan CompanySeeder terlebih dahulu.');
+        if ($companies->count() < 2) {
+            $this->command->warn('Seeder memerlukan minimal 2 company. Jalankan AdminSeeder terlebih dahulu.');
             return;
         }
 
@@ -50,10 +49,52 @@ class BranchSeeder extends Seeder
                 'country' => 'Indonesia',
                 'status' => 'Active',
             ],
+            [
+                'branch_name' => 'Yogyakarta Branch',
+                'location' => 'DIY',
+                'latitude' => -7.795580,
+                'longitude' => 110.369490,
+                'address' => 'Jl. Malioboro No. 1',
+                'city' => 'Yogyakarta',
+                'country' => 'Indonesia',
+                'status' => 'Active',
+            ],
+            [
+                'branch_name' => 'Semarang Branch',
+                'location' => 'Central Java',
+                'latitude' => -6.966667,
+                'longitude' => 110.416664,
+                'address' => 'Jl. Pandanaran No. 12',
+                'city' => 'Semarang',
+                'country' => 'Indonesia',
+                'status' => 'Active',
+            ],
+            [
+                'branch_name' => 'Medan Branch',
+                'location' => 'North Sumatra',
+                'latitude' => 3.595196,
+                'longitude' => 98.672226,
+                'address' => 'Jl. Gatot Subroto No. 20',
+                'city' => 'Medan',
+                'country' => 'Indonesia',
+                'status' => 'Active',
+            ],
+            [
+                'branch_name' => 'Makassar Branch',
+                'location' => 'South Sulawesi',
+                'latitude' => -5.147665,
+                'longitude' => 119.432732,
+                'address' => 'Jl. Pengayoman No. 3',
+                'city' => 'Makassar',
+                'country' => 'Indonesia',
+                'status' => 'Active',
+            ],
         ];
 
-        foreach ($branches as $data) {
-            Branch::create(array_merge($data, [
+        // Buat 7 branch tambahan untuk memenuhi total 10
+        foreach ($branches as $branch) {
+            $company = $companies->random(); // Assign acak ke salah satu company
+            Branch::create(array_merge($branch, [
                 'id' => (string) Str::uuid(),
                 'company_id' => $company->id,
                 'location_radius' => 100,

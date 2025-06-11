@@ -26,6 +26,7 @@ use App\Http\Controllers\PaymentController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
 Route::get('/test', function () {
     return response()->json(['status' => 'ok']);
 });
@@ -65,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Hanya bisa diakses oleh Admin
 Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
+    // Dashboard
+    Route::get('/index', [DashboardController::class, 'index']);
     // Company
     Route::post('/company', [CompanyController::class, 'store']);
     Route::put('/company/{company}/location', [CompanyController::class, 'updateLocation']);
@@ -85,7 +88,7 @@ Route::middleware(['auth:sanctum', 'admin.only'])->group(function () {
     Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
 
     // Detail Admin
-    Route::get('admin/profile', [AuthController::class, 'fetchAdmin']);
+    Route::get('admin/profile', [AuthController::class, 'fetchingadmin']);
 
     // Branch
      Route::get('/branches/index', [BranchController::class, 'index']);

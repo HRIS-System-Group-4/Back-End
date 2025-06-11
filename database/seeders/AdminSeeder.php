@@ -9,12 +9,13 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\Company;
+use App\Models\Branch;
 
 class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Company dengan subscription (HRIS)
+        // 1. HRIS Company
         $company1 = Company::firstOrCreate(
             ['company_username' => 'hris'],
             [
@@ -28,7 +29,7 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        // 2. Company tanpa subscription
+        // 2. NoSub Company
         $company2 = Company::firstOrCreate(
             ['company_username' => 'nosub'],
             [
@@ -42,48 +43,73 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        // 3. Admin untuk HRIS Company
-        if (!User::where('email', 'admin@hris.com')->exists()) {
-            $userId1 = Str::uuid();
-            $adminId1 = Str::uuid();
-
-            User::create([
-                'id' => $userId1,
-                'email' => 'lalasipo20@gmail.com',
-                'password' => Hash::make('password123'),
-                'is_admin' => true,
-                'employee_id' => 'ADM001',
-            ]);
-
-            Admin::create([
-                'id' => $adminId1,
-                'user_id' => $userId1,
-                'first_name' => 'Iqbal',
-                'last_name' => 'Makmur',
-                'company_id' => $company1->id,
-            ]);
+        // Ambil semua branch untuk assign admin ke branch yang valid
+        $branches = Branch::all();
+        if ($branches->count() < 5) {
+            $this->command->warn('Minimal butuh 5 branch untuk assign semua admin.');
+            return;
         }
 
-        // 4. Admin untuk NoSub Company
-        if (!User::where('email', 'admin@nosub.com')->exists()) {
-            $userId2 = Str::uuid();
-            $adminId2 = Str::uuid();
-
-            User::create([
-                'id' => $userId2,
+        $adminData = [
+            [
+                'email' => 'lalasipo20@gmail.com',
+                'first_name' => 'Iqbal',
+                'last_name' => 'Makmur',
+                'company' => $company1,
+                'employee_id' => 'ADM001',
+            ],
+            [
                 'email' => 'admin@nosub.com',
-                'password' => Hash::make('password123'),
-                'is_admin' => true,
-                'employee_id' => 'ADM002',
-            ]);
-
-            Admin::create([
-                'id' => $adminId2,
-                'user_id' => $userId2,
                 'first_name' => 'Tania',
                 'last_name' => 'Rahma',
-                'company_id' => $company2->id,
-            ]);
+                'company' => $company2,
+                'employee_id' => 'ADM002',
+            ],
+            [
+                'email' => 'admin3@example.com',
+                'first_name' => 'Budi',
+                'last_name' => 'Santoso',
+                'company' => $company1,
+                'employee_id' => 'ADM003',
+            ],
+            [
+                'email' => 'admin4@example.com',
+                'first_name' => 'Sari',
+                'last_name' => 'Dewi',
+                'company' => $company2,
+                'employee_id' => 'ADM004',
+            ],
+            [
+                'email' => 'admin5@example.com',
+                'first_name' => 'Rizky',
+                'last_name' => 'Ananda',
+                'company' => $company1,
+                'employee_id' => 'ADM005',
+            ],
+        ];
+
+        foreach ($adminData as $index => $data) {
+            if (!User::where('email', $data['email'])->exists()) {
+                $userId = Str::uuid();
+                $adminId = Str::uuid();
+
+                User::create([
+                    'id' => $userId,
+                    'email' => $data['email'],
+                    'password' => Hash::make('password123'),
+                    'is_admin' => true,
+                    'employee_id' => $data['employee_id'],
+                ]);
+
+                Admin::create([
+                    'id' => $adminId,
+                    'user_id' => $userId,
+                    'first_name' => $data['first_name'],
+                    'last_name' => $data['last_name'],
+                    'company_id' => $data['company']->id,
+                    'branch_id' => $branches[$index]->id, // Assign branch ke admin
+                ]);
+            }
         }
     }
 }

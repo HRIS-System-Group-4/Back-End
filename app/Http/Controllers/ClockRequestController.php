@@ -191,7 +191,7 @@ class ClockRequestController extends Controller
         if ($source === 'check_clock') {
             $clockIn = CheckClock::with(['user.employee.branch'])
                 ->where('id', $id)
-                ->where('check_clock_type', 1)
+                ->whereIn('check_clock_type', [1, 3, 4]) // bisa clock_in, sick, atau leave
                 ->firstOrFail();
 
             $clockOut = CheckClock::where('user_id', $clockIn->user_id)
@@ -202,16 +202,25 @@ class ClockRequestController extends Controller
             $employee = $clockIn->user->employee;
             $branch = $employee?->branch;
 
-            // Attendance Type Logic
+            // Attendance Type Logic (disamakan dengan logika permintaan)
             $attendanceType = 'Unknown';
-            $setting = $clockIn->user?->checkClockSettingTimeForDay($clockIn->date);
-            if ($setting) {
-                $clockInLimit = \Carbon\Carbon::createFromFormat('H:i:s', $setting->clock_in)
-                    ->addMinutes($setting->late_tolerance);
-                $clockInTime = \Carbon\Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
-                $attendanceType = $clockInTime->lte($clockInLimit) ? 'On Time' : 'Late';
-            } else {
-                $attendanceType = 'On Time';
+
+            if (in_array($clockIn->check_clock_type, [3, 4])) {
+                $attendanceType = $clockIn->check_clock_type == 3 ? 'Sick Leave' : 'Annual Leave';
+            } elseif ($clockIn) {
+                $setting = $employee?->checkClockSettingTimeForDay($clockIn->date);
+                if ($setting) {
+                    $clockInTime = Carbon::createFromFormat('H:i:s', $clockIn->check_clock_time);
+                    $scheduled = Carbon::createFromFormat('H:i:s', $setting->clock_in);
+                    $earliest = $scheduled->copy()->subMinutes(30);
+                    $latest = $scheduled->copy()->addMinutes($setting->late_tolerance);
+
+                    $attendanceType = $clockInTime->between($earliest, $latest)
+                        ? 'On Time'
+                        : 'Late';
+                } else {
+                    $attendanceType = 'On Time';
+                }
             }
 
             return response()->json([
@@ -233,6 +242,7 @@ class ClockRequestController extends Controller
                 ],
             ]);
         }
+
 
         // Default: dari ClockRequest
         $request = ClockRequest::with(['user.employee.branch'])->findOrFail($id);

@@ -36,4 +36,9 @@ class Company extends Model
     {
         return $this->hasOne(Admin::class, 'company_id');
     }
+
+    public function branches()
+    {
+        return $this->hasMany(Branch::class, 'company_id');
+    }
 }

@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CheckClock;
-use App\Models\User;
+use App\Models\Employee;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -15,30 +15,44 @@ class AutoClockOut extends Command
 
     public function handle()
     {
-        $yesterday = Carbon::yesterday()->toDateString();
+        $yesterday = Carbon::yesterday();
+        $dayName = strtolower($yesterday->format('l')); // contoh: 'monday'
 
-        // Ambil user_id yang clock in kemarin, tapi belum clock out
+        // Ambil user_id yang clock in kemarin tapi belum clock out
         $usersToAutoClockOut = CheckClock::where('check_clock_type', 1)
-            ->whereDate('created_at', $yesterday)
+            ->whereDate('created_at', $yesterday->toDateString())
             ->pluck('user_id')
             ->diff(
                 CheckClock::where('check_clock_type', 2)
-                    ->whereDate('created_at', $yesterday)
+                    ->whereDate('created_at', $yesterday->toDateString())
                     ->pluck('user_id')
             );
 
-        $usersToAutoClockOut->each(function ($userId) use ($yesterday) {
+        $employees = Employee::with(['checkClockSetting.settingTimes'])->whereIn('user_id', $usersToAutoClockOut)->get();
+
+        $count = 0;
+
+        foreach ($employees as $employee) {
+            $settingTime = $employee->checkClockSetting->settingTimes
+                ->firstWhere('day', $dayName);
+
+            if (!$settingTime) continue;
+
+            $clockOutTime = Carbon::parse($yesterday->format('Y-m-d') . ' ' . $settingTime->clock_out);
+
             CheckClock::create([
                 'id'               => (string) Str::uuid(),
-                'user_id'          => $userId,
+                'user_id'          => $employee->user_id,
                 'check_clock_type' => 2,
-                'check_clock_time' => '00:00:00',
-                'created_at'       => Carbon::parse($yesterday . ' 23:59:59'),
+                'check_clock_time' => $settingTime->clock_out,
+                'created_at'       => $clockOutTime,
                 'updated_at'       => now(),
                 'proof_path'       => null,
             ]);
-        });
 
-        $this->info('Auto clock out completed for ' . $usersToAutoClockOut->count() . ' employees.');
+            $count++;
+        }
+
+        // $this->info("Auto clock out completed for {$count} employees.");
     }
 }

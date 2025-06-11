@@ -14,16 +14,17 @@ class DatabaseSeeder extends Seeder
     {
         // Jalankan seeder untuk admin
         $this->call([
-            CompanySeeder::class,
+            CompanyAndAdminSeeder::class,
+            // CompanySeeder::class,
             SubscriptionPricingSeeder::class,
-            AdminSeeder::class,
+            // AdminSeeder::class,
+            BranchSeeder::class,
             // SubscriptionSeeder::class,
             CheckClockSettingSeeder::class,
             EmployeeSeeder::class,
             SubscriptionPricingSeeder::class,
             ClockRequestSeeder::class,
             CheckClockSeeder::class,
-            BranchSeeder::class,
         ]);
     }
 }
