@@ -67,6 +67,19 @@ class DashboardController extends Controller
 
         $totalBranches = Branch::where('company_id', $companyId)->count();
 
+        $employeePerBranch = Employee::where('company_id', $companyId)
+            ->selectRaw('branch_id, COUNT(*) as total')
+            ->groupBy('branch_id')
+            ->with('branch')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'branch_id' => $item->branch_id,
+                    'branch_name' => $item->branch?->branch_name ?? 'Unknown',
+                    'employee_count' => $item->total,
+                ];
+            });
+
         return response()->json([
             'total_employees' => $totalEmployees,
             'employees_clocked_in_today' => $employeesClockedInToday,
@@ -74,6 +87,7 @@ class DashboardController extends Controller
             'total_leave_&_absent' => $totalApprovedLeave + $totalAbsent,
             'employment_types' => $employmentTypeCounts,
             'total_branches' => $totalBranches,
+            'employee_count_per_branch' => $employeePerBranch,
         ]);
     }
 
